@@ -1,0 +1,2282 @@
+{
+  "version": 1,
+  "fetchedAt": 1790956362642,
+  "providers": {
+    "openai": [
+      {
+        "id": "chat-latest",
+        "mode": "chat"
+      },
+      {
+        "id": "container",
+        "mode": "chat"
+      },
+      {
+        "id": "daybreak-blue-latest",
+        "mode": "chat"
+      },
+      {
+        "id": "daybreak-red-latest",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-3.5-turbo",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "gpt-3.5-turbo-0125",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "gpt-3.5-turbo-16k",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "gpt-4",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "gpt-4-0613",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "gpt-4-1106-preview",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "gpt-4-turbo",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "gpt-4-turbo-2024-04-09",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "gpt-4.1",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-4.1-2025-04-14",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-4.1-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-4.1-mini-2025-04-14",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-4.1-nano",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "gpt-4.1-nano-2025-04-14",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "gpt-4o",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-4o-2024-05-13",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "gpt-4o-2024-08-06",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-4o-2024-11-20",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-4o-audio-preview-2024-12-17",
+        "mode": "chat",
+        "deprecatedOn": "2027-01-20"
+      },
+      {
+        "id": "gpt-4o-audio-preview-2025-06-03",
+        "mode": "chat",
+        "deprecatedOn": "2027-01-20"
+      },
+      {
+        "id": "gpt-4o-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-4o-mini-2024-07-18",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-4o-mini-audio-preview-2024-12-17",
+        "mode": "chat",
+        "deprecatedOn": "2027-01-20"
+      },
+      {
+        "id": "gpt-4o-mini-search-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-4o-search-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5-2025-08-07",
+        "mode": "chat",
+        "deprecatedOn": "2026-12-11"
+      },
+      {
+        "id": "gpt-5-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5-mini-2025-08-07",
+        "mode": "chat",
+        "deprecatedOn": "2026-12-11"
+      },
+      {
+        "id": "gpt-5-nano",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5-nano-2025-08-07",
+        "mode": "chat",
+        "deprecatedOn": "2026-12-11"
+      },
+      {
+        "id": "gpt-5-search-api",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5-search-api-2025-10-14",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.1",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.1-2025-11-13",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.2",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.2-2025-12-11",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.4",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.4-2026-03-05",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.4-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.4-mini-2026-03-17",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.4-nano",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.4-nano-2026-03-17",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.5",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.5-2026-04-23",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.5-cyber",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.6",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.6-cyber",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.6-luna",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.6-sol",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-5.6-terra",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-6-astra",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-6-luna",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-6-sol",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-6.1-sol",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-audio",
+        "mode": "chat",
+        "deprecatedOn": "2027-01-20"
+      },
+      {
+        "id": "gpt-audio-1.5",
+        "mode": "chat"
+      },
+      {
+        "id": "gpt-audio-2025-08-28",
+        "mode": "chat",
+        "deprecatedOn": "2027-01-20"
+      },
+      {
+        "id": "gpt-audio-mini",
+        "mode": "chat",
+        "deprecatedOn": "2027-01-20"
+      },
+      {
+        "id": "gpt-audio-mini-2025-12-15",
+        "mode": "chat",
+        "deprecatedOn": "2027-01-20"
+      },
+      {
+        "id": "gpt-rosalind-research",
+        "mode": "chat"
+      },
+      {
+        "id": "o1",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "o1-2024-12-17",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "o3",
+        "mode": "chat"
+      },
+      {
+        "id": "o3-2025-04-16",
+        "mode": "chat",
+        "deprecatedOn": "2026-12-11"
+      },
+      {
+        "id": "o3-mini",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "o3-mini-2025-01-31",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "o4-mini",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      },
+      {
+        "id": "o4-mini-2025-04-16",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-23"
+      }
+    ],
+    "groq": [
+      {
+        "id": "meta-llama/llama-prompt-guard-2-22m",
+        "mode": "chat"
+      },
+      {
+        "id": "meta-llama/llama-prompt-guard-2-86m",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-oss-120b",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-oss-20b",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-oss-safeguard-20b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.8-27b",
+        "mode": "chat"
+      }
+    ],
+    "deepseek": [
+      {
+        "id": "deepseek-coder",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek-r1",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek-v3",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek-v3.2",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek-v4-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek-v4-flash-vision-exp",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek-v4-pro",
+        "mode": "chat"
+      }
+    ],
+    "openrouter": [
+      {
+        "id": "aion-labs/aion-2.0",
+        "mode": "chat"
+      },
+      {
+        "id": "aion-labs/aion-3.0",
+        "mode": "chat"
+      },
+      {
+        "id": "aion-labs/aion-3.0-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "aion-labs/aion-3.5",
+        "mode": "chat"
+      },
+      {
+        "id": "aion-labs/aion-3.5-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "aion-labs/aion-rp-llama-3.1-8b",
+        "mode": "chat"
+      },
+      {
+        "id": "amazon/nova-2-lite-v1",
+        "mode": "chat"
+      },
+      {
+        "id": "amazon/nova-lite-v1",
+        "mode": "chat"
+      },
+      {
+        "id": "amazon/nova-micro-v1",
+        "mode": "chat"
+      },
+      {
+        "id": "amazon/nova-premier-v1",
+        "mode": "chat"
+      },
+      {
+        "id": "amazon/nova-pro-v1",
+        "mode": "chat"
+      },
+      {
+        "id": "anthracite-org/magnum-v4-72b",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-3-haiku",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-3.5-sonnet",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-3.7-sonnet",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-fable-5",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-fable-5:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-fable-5.1",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-fable-5.1:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-haiku-4.5",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-haiku-4.5:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-4.1",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-4.1:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-4.5",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-4.5:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-4.6",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-4.6:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-4.7",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-4.7:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-4.8",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-4.8:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-5",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-5:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-5.5",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-opus-5.5:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-sonnet-4",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-sonnet-4.5",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-sonnet-4.5:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-sonnet-4.6",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-sonnet-4.6:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-sonnet-5",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-sonnet-5:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-sonnet-5.5",
+        "mode": "chat"
+      },
+      {
+        "id": "anthropic/claude-sonnet-5.5:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "apodex/apodex-1.1-mini:free",
+        "mode": "chat"
+      },
+      {
+        "id": "arcee-ai/trinity-large-thinking",
+        "mode": "chat"
+      },
+      {
+        "id": "baidu/ernie-4.5-vl-424b-a47b",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-08"
+      },
+      {
+        "id": "bytedance-seed/seed-1.6",
+        "mode": "chat",
+        "deprecatedOn": "2026-11-11"
+      },
+      {
+        "id": "bytedance-seed/seed-1.6-flash",
+        "mode": "chat",
+        "deprecatedOn": "2026-11-11"
+      },
+      {
+        "id": "bytedance-seed/seed-2-1-turbo",
+        "mode": "chat"
+      },
+      {
+        "id": "bytedance-seed/seed-2.0-code",
+        "mode": "chat",
+        "deprecatedOn": "2026-11-11"
+      },
+      {
+        "id": "bytedance-seed/seed-2.0-lite",
+        "mode": "chat"
+      },
+      {
+        "id": "bytedance-seed/seed-2.0-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "bytedance/ui-tars-1.5-7b",
+        "mode": "chat"
+      },
+      {
+        "id": "cognitivecomputations/dolphin-mistral-24b-venice-edition",
+        "mode": "chat"
+      },
+      {
+        "id": "cohere/command-a",
+        "mode": "chat"
+      },
+      {
+        "id": "cohere/command-a-plus",
+        "mode": "chat"
+      },
+      {
+        "id": "cohere/command-r-08-2024",
+        "mode": "chat"
+      },
+      {
+        "id": "cohere/command-r-plus-08-2024",
+        "mode": "chat"
+      },
+      {
+        "id": "cohere/command-r7b-12-2024",
+        "mode": "chat"
+      },
+      {
+        "id": "cohere/north-mini-code:free",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-chat",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-chat-v3-0324",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-chat-v3.1",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-r1",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-r1-0528",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-v4-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-v4-flash-0731",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-v4-flash-vision-exp",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-v4-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-v4-pro-0813",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-v4.1-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "deepseek/deepseek-v4.1-flash:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "dots-studio/dots-3-note-preview:free",
+        "mode": "chat",
+        "deprecatedOn": "2026-12-31"
+      },
+      {
+        "id": "fireworks/ember-1",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-2.5-flash",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-20"
+      },
+      {
+        "id": "google/gemini-2.5-flash-image",
+        "mode": "chat",
+        "deprecatedOn": "2027-03-15"
+      },
+      {
+        "id": "google/gemini-2.5-flash-lite",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-20"
+      },
+      {
+        "id": "google/gemini-2.5-flash-lite:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-2.5-flash:batch",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-20"
+      },
+      {
+        "id": "google/gemini-2.5-pro",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-20"
+      },
+      {
+        "id": "google/gemini-2.5-pro-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-2.5-pro-preview-05-06",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-2.5-pro:batch",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-20"
+      },
+      {
+        "id": "google/gemini-3-flash-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3-flash-preview:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3-pro-image",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3-pro-image-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3-pro-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.1-flash-image",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.1-flash-image-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.1-flash-lite",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.1-flash-lite-image",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.1-flash-lite-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.1-flash-lite:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.1-pro-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.1-pro-preview-customtools",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.1-pro-preview:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.5-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.5-flash-lite",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.5-flash-lite:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.5-flash:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.6-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.6-flash:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.7-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.7-flash:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.8-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemini-3.8-flash:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemma-2-27b-it",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemma-3-12b-it",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemma-3-27b-it",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemma-3-4b-it",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemma-4-26b-a4b-it",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemma-4-26b-a4b-it:free",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemma-4-31b-it",
+        "mode": "chat"
+      },
+      {
+        "id": "google/gemma-4-31b-it:free",
+        "mode": "chat"
+      },
+      {
+        "id": "gryphe/mythomax-l2-13b",
+        "mode": "chat"
+      },
+      {
+        "id": "ibm-granite/granite-4.0-h-micro",
+        "mode": "chat"
+      },
+      {
+        "id": "ibm-granite/granite-4.2-8b",
+        "mode": "chat"
+      },
+      {
+        "id": "inception/mercury-2",
+        "mode": "chat"
+      },
+      {
+        "id": "inception/mercury-2.5",
+        "mode": "chat"
+      },
+      {
+        "id": "inclusionai/ling-3.0-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "inclusionai/ling-3.0-flash-fin",
+        "mode": "chat"
+      },
+      {
+        "id": "inclusionai/ling-3.0-flash-fin:free",
+        "mode": "chat"
+      },
+      {
+        "id": "inclusionai/ling-3.0-flash-sante:free",
+        "mode": "chat"
+      },
+      {
+        "id": "inclusionai/ling-3.0-flash-vl",
+        "mode": "chat"
+      },
+      {
+        "id": "inclusionai/ling-3.0-flash-vl:free",
+        "mode": "chat"
+      },
+      {
+        "id": "inference-net/schematron-v2-small",
+        "mode": "chat"
+      },
+      {
+        "id": "inference-net/schematron-v2-turbo",
+        "mode": "chat"
+      },
+      {
+        "id": "kwaipilot/kat-coder-pro-v2.5",
+        "mode": "chat"
+      },
+      {
+        "id": "liquid/lfm-2.5-2.6b:free",
+        "mode": "chat"
+      },
+      {
+        "id": "mancer/weaver",
+        "mode": "chat"
+      },
+      {
+        "id": "meituan/longcat-2.0",
+        "mode": "chat"
+      },
+      {
+        "id": "meta-llama/llama-3-70b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "meta-llama/llama-3.1-70b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "meta-llama/llama-3.1-8b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "meta-llama/llama-3.2-1b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "meta-llama/llama-3.2-3b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "meta-llama/llama-3.3-70b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "meta-llama/llama-4-maverick",
+        "mode": "chat"
+      },
+      {
+        "id": "meta-llama/llama-4-scout",
+        "mode": "chat"
+      },
+      {
+        "id": "meta-llama/llama-guard-4-12b",
+        "mode": "chat"
+      },
+      {
+        "id": "meta/muse-glimmer-30b",
+        "mode": "chat"
+      },
+      {
+        "id": "meta/muse-spark-1.1",
+        "mode": "chat"
+      },
+      {
+        "id": "meta/muse-spark-1.2",
+        "mode": "chat"
+      },
+      {
+        "id": "meta/muse-spark-1.2-contributor",
+        "mode": "chat"
+      },
+      {
+        "id": "meta/muse-spark-1.3",
+        "mode": "chat"
+      },
+      {
+        "id": "meta/muse-spark-1.3-contributor",
+        "mode": "chat"
+      },
+      {
+        "id": "microsoft/phi-4",
+        "mode": "chat"
+      },
+      {
+        "id": "microsoft/wizardlm-2-8x22b",
+        "mode": "chat"
+      },
+      {
+        "id": "minimax/minimax-01",
+        "mode": "chat"
+      },
+      {
+        "id": "minimax/minimax-m1",
+        "mode": "chat"
+      },
+      {
+        "id": "minimax/minimax-m2",
+        "mode": "chat"
+      },
+      {
+        "id": "minimax/minimax-m2-her",
+        "mode": "chat"
+      },
+      {
+        "id": "minimax/minimax-m2.1",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-08"
+      },
+      {
+        "id": "minimax/minimax-m2.5",
+        "mode": "chat"
+      },
+      {
+        "id": "minimax/minimax-m2.7",
+        "mode": "chat"
+      },
+      {
+        "id": "minimax/minimax-m2.7:free",
+        "mode": "chat"
+      },
+      {
+        "id": "minimax/minimax-m3",
+        "mode": "chat"
+      },
+      {
+        "id": "minimax/minimax-m3:free",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/codestral-2508",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/codestral-2508:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/devstral-2512",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/ministral-14b-2512",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/ministral-3b-2512",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/ministral-8b-2512",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/ministral-8b-2512:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-7b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-large",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-large-2407",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-large-2512",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-large-2512:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-medium-3",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-medium-3-5",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-medium-3-5:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-medium-3.1",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-medium-3.1:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-nemo",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-saba",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-small-24b-instruct-2501",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-small-2603",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-small-2603:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-small-3.1-24b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mistral-small-3.2-24b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/mixtral-8x22b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "mistralai/voxtral-small-24b-2507",
+        "mode": "chat"
+      },
+      {
+        "id": "moonshotai/kimi-k2",
+        "mode": "chat"
+      },
+      {
+        "id": "moonshotai/kimi-k2-0905",
+        "mode": "chat"
+      },
+      {
+        "id": "moonshotai/kimi-k2-thinking",
+        "mode": "chat"
+      },
+      {
+        "id": "moonshotai/kimi-k2.5",
+        "mode": "chat"
+      },
+      {
+        "id": "moonshotai/kimi-k2.6",
+        "mode": "chat"
+      },
+      {
+        "id": "moonshotai/kimi-k2.7-code",
+        "mode": "chat"
+      },
+      {
+        "id": "moonshotai/kimi-k3",
+        "mode": "chat"
+      },
+      {
+        "id": "moonshotai/kimi-k3:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "morph/morph-v3-fast",
+        "mode": "chat"
+      },
+      {
+        "id": "morph/morph-v3-large",
+        "mode": "chat"
+      },
+      {
+        "id": "nex-agi/nex-n2.5-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "nex-agi/nex-n2.5-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "nousresearch/hermes-3-llama-3.1-405b",
+        "mode": "chat"
+      },
+      {
+        "id": "nousresearch/hermes-3-llama-3.1-70b",
+        "mode": "chat"
+      },
+      {
+        "id": "nousresearch/hermes-4-405b",
+        "mode": "chat"
+      },
+      {
+        "id": "nvidia/nemotron-3-nano-30b-a3b",
+        "mode": "chat"
+      },
+      {
+        "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "mode": "chat"
+      },
+      {
+        "id": "nvidia/nemotron-3-super-120b-a12b",
+        "mode": "chat"
+      },
+      {
+        "id": "nvidia/nemotron-3-super-120b-a12b:free",
+        "mode": "chat"
+      },
+      {
+        "id": "nvidia/nemotron-3-ultra-550b-a55b",
+        "mode": "chat"
+      },
+      {
+        "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "mode": "chat"
+      },
+      {
+        "id": "nvidia/nemotron-3.5-content-safety",
+        "mode": "chat"
+      },
+      {
+        "id": "nvidia/nemotron-3.5-content-safety:free",
+        "mode": "chat"
+      },
+      {
+        "id": "nvidia/nemotron-3.5-lightning",
+        "mode": "chat"
+      },
+      {
+        "id": "nvidia/nemotron-3.5-lightning:free",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-3.5-turbo",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-3.5-turbo-0613",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-3.5-turbo-16k",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-3.5-turbo-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-3.5-turbo:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4-turbo",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4-turbo-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4-turbo:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4.1",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4.1-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4.1-mini:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4.1-nano",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4.1-nano:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4.1:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4o",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4o-2024-05-13",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4o-2024-08-06",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4o-2024-11-20",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4o-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4o-mini-2024-07-18",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4o-mini:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-4o:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5-chat",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5-codex",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5-image",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5-image-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5-mini:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5-nano",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5-nano:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5-pro:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.1",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.1-codex",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.1-codex-max",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.1-codex-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.1:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.2",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.2-chat",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.2-codex",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.2-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.2-pro:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.2:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.3-codex",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.4",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.4-image-2",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.4-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.4-mini:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.4-nano",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.4-nano:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.4-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.4-pro:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.4:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.5",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.5-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.5-pro:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.5:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-luna",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-luna-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-luna-pro:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-luna:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-sol",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-sol-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-sol-pro:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-sol:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-terra",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-terra-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-terra-pro:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-5.6-terra:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-astra",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-astra-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-astra-pro:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-astra:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-luna",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-luna-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-luna-pro:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-luna:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-sol",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-sol-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-sol-pro:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6-sol:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6.1-sol",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6.1-sol-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6.1-sol-pro:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-6.1-sol:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-audio",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-audio-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-chat-latest",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-oss-120b",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-oss-120b:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-oss-20b",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-oss-20b:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/gpt-oss-safeguard-20b",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/o1",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/o1-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/o3",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/o3-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/o3-mini-high",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/o3-mini:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/o3-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/o3:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/o4-mini",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/o4-mini-high",
+        "mode": "chat"
+      },
+      {
+        "id": "openai/o4-mini:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "openrouter/auto",
+        "mode": "chat"
+      },
+      {
+        "id": "openrouter/bodybuilder",
+        "mode": "chat"
+      },
+      {
+        "id": "openrouter/free",
+        "mode": "chat"
+      },
+      {
+        "id": "perceptron/perceptron-mk1",
+        "mode": "chat"
+      },
+      {
+        "id": "perceptron/perceptron-mk1.5",
+        "mode": "chat"
+      },
+      {
+        "id": "perplexity/sonar",
+        "mode": "chat"
+      },
+      {
+        "id": "perplexity/sonar-deep-research",
+        "mode": "chat"
+      },
+      {
+        "id": "perplexity/sonar-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "perplexity/sonar-pro-search",
+        "mode": "chat"
+      },
+      {
+        "id": "perplexity/sonar-reasoning-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "poolside/laguna-s-2.1",
+        "mode": "chat"
+      },
+      {
+        "id": "poolside/laguna-s-2.1:free",
+        "mode": "chat"
+      },
+      {
+        "id": "poolside/laguna-xs-2.1",
+        "mode": "chat"
+      },
+      {
+        "id": "poolside/laguna-xs-2.1:free",
+        "mode": "chat"
+      },
+      {
+        "id": "prism-ml/ternary-bonsai-2-27b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen-2.5-72b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen-2.5-7b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen-2.5-coder-32b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen-plus",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen-plus-2025-07-28",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen-vl-plus",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen2.5-vl-72b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-14b",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-235b-a22b",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-235b-a22b-2507",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-235b-a22b-thinking-2507",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-30b-a3b",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-30b-a3b-instruct-2507",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-30b-a3b-thinking-2507",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-32b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-8b",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-coder",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-coder-30b-a3b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-coder-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-coder-next",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-coder-plus",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-max",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-max-thinking",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-next-80b-a3b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-next-80b-a3b-thinking",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-vl-235b-a22b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-vl-235b-a22b-thinking",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-vl-30b-a3b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3-vl-30b-a3b-thinking",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-vl-32b-instruct",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-vl-8b-instruct",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3-vl-8b-thinking",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3.5-122b-a10b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.5-27b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.5-35b-a3b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.5-397b-a17b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.5-9b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.5-flash-02-23",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.5-plus-02-15",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.5-plus-20260420",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.6-27b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.6-35b-a3b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.6-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.6-max-preview",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-09"
+      },
+      {
+        "id": "qwen/qwen3.6-plus",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.7-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.7-max",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.7-plus",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.8-2.4t-a95b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.8-27b",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.8-27b:free",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.8-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.8-max",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.8-max-0902",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.8-max-prime",
+        "mode": "chat"
+      },
+      {
+        "id": "qwen/qwen3.8-omni-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "rekaai/reka-edge",
+        "mode": "chat"
+      },
+      {
+        "id": "rekaai/reka-flash-3",
+        "mode": "chat"
+      },
+      {
+        "id": "relace/relace-apply-3",
+        "mode": "chat"
+      },
+      {
+        "id": "relace/relace-search",
+        "mode": "chat"
+      },
+      {
+        "id": "sakana/fugu-max",
+        "mode": "chat"
+      },
+      {
+        "id": "sakana/fugu-ultra",
+        "mode": "chat"
+      },
+      {
+        "id": "sakana/fugu-ultra-v2",
+        "mode": "chat"
+      },
+      {
+        "id": "sakana/sakana-namazu",
+        "mode": "chat"
+      },
+      {
+        "id": "sao10k/l3-lunaris-8b",
+        "mode": "chat"
+      },
+      {
+        "id": "sao10k/l3.1-euryale-70b",
+        "mode": "chat"
+      },
+      {
+        "id": "sao10k/l3.3-euryale-70b",
+        "mode": "chat"
+      },
+      {
+        "id": "stealth/space-bunny-alpha",
+        "mode": "chat",
+        "deprecatedOn": "2026-10-05"
+      },
+      {
+        "id": "stepfun/step-3.5-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "stepfun/step-3.7-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "switchpoint/router",
+        "mode": "chat"
+      },
+      {
+        "id": "tencent/hunyuan-a13b-instruct",
+        "mode": "chat"
+      },
+      {
+        "id": "tencent/hy-mt2-1.8b",
+        "mode": "chat"
+      },
+      {
+        "id": "tencent/hy-mt2-30b-a3b",
+        "mode": "chat"
+      },
+      {
+        "id": "tencent/hy-mt2-7b",
+        "mode": "chat"
+      },
+      {
+        "id": "tencent/hy3",
+        "mode": "chat"
+      },
+      {
+        "id": "tencent/hy3-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "tencent/hy4-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "thedrummer/cydonia-24b-v4.1",
+        "mode": "chat"
+      },
+      {
+        "id": "thedrummer/skyfall-36b-v2",
+        "mode": "chat"
+      },
+      {
+        "id": "thedrummer/unslopnemo-12b",
+        "mode": "chat"
+      },
+      {
+        "id": "thinkingmachines/inkling",
+        "mode": "chat"
+      },
+      {
+        "id": "thinkingmachines/inkling-small",
+        "mode": "chat"
+      },
+      {
+        "id": "thinkingmachines/inkling-small:free",
+        "mode": "chat"
+      },
+      {
+        "id": "thinkingmachines/inkling:free",
+        "mode": "chat"
+      },
+      {
+        "id": "typesafe/jev-1.13",
+        "mode": "evaluation"
+      },
+      {
+        "id": "unbiased/pareto",
+        "mode": "chat"
+      },
+      {
+        "id": "unbiased/pareto-26.10-preview",
+        "mode": "chat"
+      },
+      {
+        "id": "undi95/remm-slerp-l2-13b",
+        "mode": "chat"
+      },
+      {
+        "id": "upstage/solar-mini4",
+        "mode": "chat"
+      },
+      {
+        "id": "upstage/solar-pro-3",
+        "mode": "chat"
+      },
+      {
+        "id": "upstage/solar-pro4",
+        "mode": "chat"
+      },
+      {
+        "id": "writer/palmyra-x5",
+        "mode": "chat"
+      },
+      {
+        "id": "x-ai/grok-4",
+        "mode": "chat"
+      },
+      {
+        "id": "x-ai/grok-4.20",
+        "mode": "chat"
+      },
+      {
+        "id": "x-ai/grok-4.20-multi-agent",
+        "mode": "chat"
+      },
+      {
+        "id": "x-ai/grok-4.3",
+        "mode": "chat"
+      },
+      {
+        "id": "x-ai/grok-4.3:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "x-ai/grok-4.5",
+        "mode": "chat"
+      },
+      {
+        "id": "x-ai/grok-4.6",
+        "mode": "chat"
+      },
+      {
+        "id": "x-ai/grok-4.7",
+        "mode": "chat"
+      },
+      {
+        "id": "x-ai/grok-build-0.1",
+        "mode": "chat"
+      },
+      {
+        "id": "xiaomi/mimo-v2-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "xiaomi/mimo-v2.5",
+        "mode": "chat"
+      },
+      {
+        "id": "xiaomi/mimo-v2.5-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "xiaomi/mimo-v2.6-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "xiaomi/mimo-v2.6-pro",
+        "mode": "chat"
+      },
+      {
+        "id": "xiaomi/mimo-v2.6-pro-ultraspeed",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-4.5",
+        "mode": "chat",
+        "deprecatedOn": "2026-12-31"
+      },
+      {
+        "id": "z-ai/glm-4.5-air",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-4.5v",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-4.6",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-4.6:exacto",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-4.6v",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-4.7",
+        "mode": "chat",
+        "deprecatedOn": "2026-12-31"
+      },
+      {
+        "id": "z-ai/glm-4.7-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-5",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-5-turbo",
+        "mode": "chat",
+        "deprecatedOn": "2098-12-31"
+      },
+      {
+        "id": "z-ai/glm-5.1",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-5.2",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-5.2:free",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-5.3",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-5.3-flash",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-5.3-flash:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-5.3-flashx",
+        "mode": "chat",
+        "deprecatedOn": "2098-12-31"
+      },
+      {
+        "id": "z-ai/glm-5.3-prime",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-5.3:batch",
+        "mode": "chat"
+      },
+      {
+        "id": "z-ai/glm-5v-turbo",
+        "mode": "chat",
+        "deprecatedOn": "2098-12-31"
+      }
+    ],
+    "typesafe": [
+      {
+        "id": "jev-1.13.0",
+        "mode": "evaluation"
+      },
+      {
+        "id": "jev-latest",
+        "mode": "evaluation"
+      },
+      {
+        "id": "jev-preview",
+        "mode": "evaluation"
+      }
+    ]
+  }
+}

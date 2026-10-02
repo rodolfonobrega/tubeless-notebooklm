@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Notebook DOM fixture</title>
+<style>body{font:16px sans-serif;padding:24px}button,input{font:inherit;margin:8px;padding:8px}</style>
+<h1>Notebook DOM fixture</h1>
+<button id="add">Add sources</button><div id="modal"></div><div id="sources"></div><div role="alert">Unable to add source</div><p id="testResult">Aguardando</p>
+<script>
+  history.replaceState(null, '', '/notebook/fixture123');
+  const title = 'Como funciona energia solar';
+  const existing = document.createElement('div');
+  existing.className = 'source-item';
+  existing.textContent = title;
+  document.querySelector('#sources').append(existing);
+  let listener;
+  window.chrome = { runtime: { onMessage: { addListener(fn) { listener = fn; } } } };
+  document.querySelector('#add').onclick = () => {
+    const modal = document.querySelector('#modal');
+    modal.setAttribute('role', 'dialog');
+    modal.replaceChildren();
+    const choice = document.createElement('button');
+    choice.textContent = 'YouTube';
+    choice.onclick = () => {
+      const input = document.createElement('input');
+      input.placeholder = 'Paste URL';
+      const submit = document.createElement('button');
+      submit.textContent = 'Insert';
+      submit.onclick = () => {
+        if (input.value === 'https://www.youtube.com/watch?v=abc12345678') {
+          const source = document.createElement('div');
+          source.className = 'source-item';
+          source.textContent = title;
+          document.querySelector('#sources').append(source);
+          modal.removeAttribute('role');
+          modal.replaceChildren();
+        }
+      };
+      modal.replaceChildren(input, submit);
+    };
+    modal.append(choice);
+  };
+  setTimeout(() => listener?.({ type: 'TUBELESS_IMPORT', url: 'https://www.youtube.com/watch?v=abc12345678', title }, null, result => {
+    document.querySelector('#testResult').textContent = JSON.stringify({ result, sourceCount: document.querySelectorAll('.source-item').length });
+  }), 100);
+</script>
+<script src="/content/notebook.js?v=3"></script>
+</html>
