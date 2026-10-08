@@ -1,4 +1,6 @@
 (() => {
+  if (globalThis.__tubelessNotebookLoaded) return;
+  globalThis.__tubelessNotebookLoaded = true;
   const LABELS = {
     add: /^(add (a |new )?sources?|adicionar (uma |nova )?fontes?|agregar fuentes?|ajouter (une |des )?sources?|quellen hinzuf[uü]gen)$/i,
     youtube: /\byoutube\b/i,

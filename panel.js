@@ -320,17 +320,21 @@ function updateDock() {
   updatePendingNotice();
 }
 
+async function pingTab(tabId) {
+  try { return (await chrome.tabs.sendMessage(tabId, { type: 'TUBELESS_PING' }))?.ok === true; }
+  catch { return false; }
+}
+
 async function ensureTabReady(tabId) {
+  if (await pingTab(tabId)) return true;
+  // Abas abertas antes da extensão carregar não recebem o content script automaticamente.
+  try { await chrome.scripting.executeScript({ target: { tabId }, files: ['content/notebook.js'] }); }
+  catch { /* aba ainda carregando ou sem permissão; as tentativas abaixo decidem */ }
   for (let attempt = 0; attempt < 8; attempt++) {
-    try {
-      const ping = await chrome.tabs.sendMessage(tabId, { type: 'TUBELESS_PING' });
-      if (ping?.ok) return true;
-    } catch {
-      // Content script ainda carregando ou estabelecendo conexão
-    }
+    if (await pingTab(tabId)) return true;
     await wait(300);
   }
-  return true;
+  throw new Error('Não foi possível conectar à aba do NotebookLM. Recarregue a página do notebook (F5) e tente novamente.');
 }
 
 async function targetTab() {
