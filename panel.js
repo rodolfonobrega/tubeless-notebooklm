@@ -231,7 +231,7 @@ function renderVideo(video) {
   const checkbox = element('input', 'select-video');
   checkbox.type = 'checkbox';
   checkbox.checked = state.selected.has(video.id);
-  checkbox.disabled = video.status !== 'approved' || Boolean(state.importQueue) || state.importing || Boolean(state.controller);
+  checkbox.disabled = Boolean(state.importQueue) || state.importing || Boolean(state.controller);
   checkbox.setAttribute('aria-label', `Selecionar ${video.title}`);
   checkbox.addEventListener('change', () => {
     if (checkbox.checked) state.selected.add(video.id); else state.selected.delete(video.id);
@@ -300,7 +300,7 @@ function updatePendingNotice() {
 }
 
 function queueResultsAvailable() {
-  return !state.importQueue || (state.result?.topic === state.importQueue.topic && state.importQueue.ids.every(id => state.result.videos.some(video => video.id === id && video.status === 'approved')));
+  return !state.importQueue || (state.result?.topic === state.importQueue.topic && state.importQueue.ids.every(id => state.result.videos.some(video => video.id === id)));
 }
 
 function updateDock() {
@@ -404,8 +404,8 @@ async function importSelected() {
   showMessage('');
   try {
     const tab = await targetTab();
-    const videos = state.result.videos.filter(video => video.status === 'approved' && state.selected.has(video.id));
-    if (!videos.length) throw new Error('Selecione pelo menos um vídeo relevante.');
+    const videos = state.result.videos.filter(video => state.selected.has(video.id));
+    if (!videos.length) throw new Error('Selecione pelo menos um vídeo.');
     let queue = buildImportQueue(state.result.topic, videos, tab.url, state.importQueue);
     state.importQueue = queue;
     const additions = videos.filter(video => !queue.completed.includes(video.id));
@@ -536,7 +536,15 @@ function installEvents() {
   });
   document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => { state.filter = button.dataset.filter; renderResults(); }));
   const selectionLocked = () => state.importQueue || state.importing || state.reviewing || state.controller;
-  $('selectAll').addEventListener('click', () => { if (selectionLocked()) return; state.selected = selectionForResult(state.result); renderResults(); persistSelection().catch(error => showMessage(error.message)); });
+  $('selectAll').addEventListener('click', () => {
+    if (selectionLocked() || !state.result) return;
+    const targets = state.filter === 'approved'
+      ? state.result.videos.filter(v => v.status === 'approved')
+      : state.result.videos;
+    targets.forEach(v => state.selected.add(v.id));
+    renderResults();
+    persistSelection().catch(error => showMessage(error.message));
+  });
   const deselect = () => { if (selectionLocked()) return; state.selected.clear(); renderResults(); persistSelection().catch(error => showMessage(error.message)); };
   $('deselectAll').addEventListener('click', deselect);
   $('dockClose').addEventListener('click', deselect);

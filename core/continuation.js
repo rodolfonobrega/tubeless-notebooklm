@@ -32,15 +32,19 @@ export function mergeDiscoveryResults(previous, batch) {
 }
 
 export function selectionForResult(result, storedIds) {
+  const allIds = new Set(result?.videos.map(video => video.id) || []);
+  if (Array.isArray(storedIds)) {
+    return new Set(storedIds.filter(id => allIds.has(id)));
+  }
   const approved = result?.videos.filter(video => video.status === 'approved').map(video => video.id) || [];
-  return new Set(Array.isArray(storedIds) ? approved.filter(id => storedIds.includes(id)) : approved);
+  return new Set(approved);
 }
 
 export function selectionAfterContinuation(previous, merged, selected) {
   const oldIds = new Set(previous.videos.map(video => video.id));
-  return new Set(merged.videos.filter(video => video.status === 'approved' && (!oldIds.has(video.id) || selected.has(video.id))).map(video => video.id));
+  return new Set(merged.videos.filter(video => (!oldIds.has(video.id) ? video.status === 'approved' : selected.has(video.id))).map(video => video.id));
 }
 
 export function selectedVideoLinks(result, selected) {
-  return sortVideosByRelevance(result?.videos || []).filter(video => video.status === 'approved' && selected.has(video.id)).map(video => videoUrl(video.id)).join('\n');
+  return sortVideosByRelevance(result?.videos || []).filter(video => selected.has(video.id)).map(video => videoUrl(video.id)).join('\n');
 }

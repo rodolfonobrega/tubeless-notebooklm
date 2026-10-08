@@ -26,10 +26,11 @@ test('novos relevantes entram selecionados, desmarcações antigas permanecem e 
   assert.equal(first.videos.length, 3);
 });
 
-test('restauração usa seleção salva e seleciona relevantes por padrão somente sem seleção anterior', () => {
+test('restauração usa seleção salva preservando escolhas manuais inclusive abaixo do score', () => {
   assert.deepEqual([...selectionForResult(first)], ['abc12345678', 'def12345678']);
   assert.deepEqual([...selectionForResult(first, [])], []);
-  assert.deepEqual([...selectionForResult(first, ['def12345678', 'ghi12345678', 'inexistente'])], ['def12345678']);
+  assert.deepEqual([...selectionForResult(first, ['def12345678', 'ghi12345678', 'inexistente'])], ['def12345678', 'ghi12345678']);
+  assert.equal(selectedVideoLinks(first, new Set(['ghi12345678'])), 'https://www.youtube.com/watch?v=ghi12345678');
 });
 
 test('rodada vazia preserva vídeos anteriores e guarda os termos tentados', () => {
