@@ -260,6 +260,10 @@
 
   let queue = Promise.resolve();
   chrome.runtime.onMessage.addListener((request, _sender, respond) => {
+    if (request?.type === 'TUBELESS_PING') {
+      respond({ ok: true, path: location.pathname });
+      return false;
+    }
     if (request?.type === 'TUBELESS_IMPORT_REVIEW') {
       const entry = [...pending].find(([, transaction]) => transaction.url === request.url && transaction.path === location.pathname);
       if (!entry) { respond({ status: 'ok' }); return false; }

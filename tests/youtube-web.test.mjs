@@ -32,7 +32,7 @@ const player = (videoId = id, overrides = {}) => ({
   ...overrides
 });
 
-test('busca pública extrai resultados reais, ignora publicidade e envia idioma sem cookies', async () => {
+test('busca pública extrai resultados reais, ignora publicidade e aceita credenciais e redirecionamento', async () => {
   let requested;
   const results = await searchYouTubeWeb(term, { ...settings, resultsPerTerm: 1 }, async (url, options) => {
     requested = { url: new URL(url), options };
@@ -44,8 +44,8 @@ test('busca pública extrai resultados reais, ignora publicidade e envia idioma 
   assert.equal(requested.url.searchParams.get('hl'), 'pt-BR');
   assert.equal(requested.url.searchParams.get('gl'), 'BR');
   assert.equal(requested.url.searchParams.get('sp'), 'EgQQASgB');
-  assert.equal(requested.options.credentials, 'omit');
-  assert.equal(requested.options.redirect, 'error');
+  assert.equal(requested.options.credentials, 'include');
+  assert.equal(requested.options.redirect, 'follow');
   assert.deepEqual(results, [{ id, title: 'Solar "{energia}"', description: 'Como funciona', channel: 'TED-Ed', publishedAt: '', thumbnail: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`, foundBy: 'energia solar', duration: 'PT4M59S', captionAvailable: true }]);
 });
 
@@ -157,7 +157,7 @@ test('enriquecimento limita simultaneidade e preserva a ordem ao receber respost
   const result = await enrichYouTubeWeb(ids.map(id => ({ ...video, id })), settings, async (url, options) => {
     active++;
     highest = Math.max(highest, active);
-    assert.equal(options.credentials, 'omit');
+    assert.equal(options.credentials, 'include');
     const current = new URL(url).searchParams.get('v');
     await new Promise(resolve => setTimeout(resolve, current === id ? 15 : 1));
     active--;
@@ -165,6 +165,20 @@ test('enriquecimento limita simultaneidade e preserva a ordem ao receber respost
   });
   assert.ok(highest <= 3, `received ${highest} concurrent requests`);
   assert.deepEqual(result.map(v => v.id), ids);
+});
+
+test('redirecionamento para domínio seguro do YouTube ou consentimento é aceito', async () => {
+  const redirectedResponse = new Response(searchPage([legacy()]), { status: 200, headers: { 'Content-Type': 'text/html' } });
+  Object.defineProperty(redirectedResponse, 'url', { value: 'https://youtube.com/results?search_query=energia+solar' });
+  const results = await searchYouTubeWeb(term, { ...settings, resultsPerTerm: 1 }, async () => redirectedResponse);
+  assert.equal(results.length, 1);
+  assert.equal(results[0].id, id);
+});
+
+test('redirecionamento fora do YouTube ou Google é bloqueado por segurança', async () => {
+  const evilResponse = new Response(searchPage([legacy()]), { status: 200, headers: { 'Content-Type': 'text/html' } });
+  Object.defineProperty(evilResponse, 'url', { value: 'https://evil-site.com/results' });
+  await assert.rejects(searchYouTubeWeb(term, settings, async () => evilResponse), /redirecionamento fora do YouTube bloqueado/i);
 });
 
 test('cancelamento interrompe antes de buscar e é propagado durante enriquecimento', async () => {

@@ -1,0 +1,54 @@
+name: CI & Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Validate manifest and syntax
+        run: npm run check
+
+      - name: Build extension zip package
+        run: npm run package
+
+      - name: Upload zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TubeLess-extension-package
+          path: dist/*.zip
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ZIP_FILE="dist/TubeLess-${VERSION}.zip"
+          if [ ! -f "$ZIP_FILE" ]; then
+            ZIP_FILE=$(ls dist/*.zip | head -n 1)
+          fi
+          gh release create "$GITHUB_REF_NAME" "$ZIP_FILE" \
+            --title "TubeLess $GITHUB_REF_NAME" \
+            --generate-notes

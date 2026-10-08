@@ -1,12 +1,13 @@
-import { DEFAULT_SETTINGS, normalizeSettings, parseLanguages, parseNotebookUrl, videoUrl, sortVideosByRelevance } from './core/search.js';
+import { DEFAULT_SETTINGS, normalizeSettings, parseLanguages, parseNotebookUrl, isNotebookSite, videoUrl, sortVideosByRelevance } from './core/search.js';
 import { runDiscovery } from './core/pipeline.js';
 import { buildImportQueue, findNotebookTab, recordBatchImportOutcome, shouldPauseImport, markImportConfirmed } from './core/imports.js';
 import { SettingsPanel, requestApiPermissions } from './settings.js';
 import { sanitizeError } from './core/connections.js';
 import { mergeDiscoveryResults, selectionForResult, selectionAfterContinuation, selectedVideoLinks } from './core/continuation.js';
+import { createHistoryEntry, addHistoryEntry, removeHistoryEntry, findHistoryEntry } from './core/history.js';
 
 const $ = id => document.getElementById(id);
-const state = { settings: { ...DEFAULT_SETTINGS }, result: null, selected: new Set(), filter: 'approved', controller: null, importing: false, reviewing: false, importQueue: null };
+const state = { settings: { ...DEFAULT_SETTINGS }, result: null, selected: new Set(), filter: 'approved', controller: null, importing: false, reviewing: false, importQueue: null, history: [] };
 const settingsPanel = new SettingsPanel();
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 let selectionWrite = Promise.resolve();
@@ -42,7 +43,7 @@ function updateLanguageControls() {
   const count = parseLanguages(state.settings.languages).length;
   $('languagePicker').disabled = Boolean(state.controller);
   $('languageOptions').querySelectorAll('input').forEach(checkbox => {
-    checkbox.disabled = checkbox.checked ? count === 1 : count >= 5;
+    checkbox.disabled = checkbox.checked ? count === 1 : count >= 20;
   });
 }
 
@@ -50,6 +51,105 @@ function persistSelection() {
   const ids = [...state.selected];
   selectionWrite = selectionWrite.catch(() => {}).then(() => chrome.storage.local.set({ selectedVideoIds: ids }));
   return selectionWrite;
+}
+
+function persistHistory() {
+  return chrome.storage.local.set({ searchHistory: state.history });
+}
+
+function isCurrentSearchSaved() {
+  if (!state.result?.topic) return false;
+  return state.history.some(item => item.topic.trim().toLowerCase() === state.result.topic.trim().toLowerCase());
+}
+
+function renderHistory() {
+  const count = state.history.length;
+  $('historyBadge').textContent = String(count);
+  $('historyBadge').classList.toggle('hidden', count === 0);
+  const list = $('historyList');
+  list.replaceChildren();
+  if (!count) {
+    list.append(element('div', 'empty-results', 'Nenhuma busca salva no histórico.'));
+    return;
+  }
+  state.history.forEach(entry => {
+    const card = element('div', 'history-item');
+    const info = element('div', 'history-info');
+    const topic = element('div', 'history-topic', entry.topic);
+    topic.title = entry.topic;
+    const approvedCount = entry.videos.filter(v => v.status === 'approved').length;
+    const meta = element('div', 'history-meta', `${entry.dateFormatted} · ${approvedCount} relevantes de ${entry.videos.length} vídeos`);
+    info.append(topic, meta);
+
+    const actions = element('div', 'history-actions');
+    const openBtn = element('button', 'secondary-button', 'Abrir');
+    openBtn.type = 'button';
+    openBtn.title = 'Carregar esta pesquisa na tela';
+    openBtn.addEventListener('click', () => loadFromHistory(entry.id));
+
+    const delBtn = element('button', 'text-button history-delete', '✕');
+    delBtn.type = 'button';
+    delBtn.title = 'Excluir esta busca';
+    delBtn.addEventListener('click', () => deleteFromHistory(entry.id));
+
+    actions.append(openBtn, delBtn);
+    card.append(info, actions);
+    list.append(card);
+  });
+}
+
+async function loadFromHistory(id) {
+  const entry = findHistoryEntry(state.history, id);
+  if (!entry) return;
+  if (state.controller || state.importing || state.reviewing) {
+    showMessage('Conclua a operação em andamento antes de carregar outra busca.');
+    return;
+  }
+  state.result = {
+    topic: entry.topic,
+    terms: entry.terms,
+    videos: entry.videos,
+    discoveredCount: entry.discoveredCount,
+    discoveredIds: entry.discoveredIds,
+    warnings: entry.warnings,
+    rounds: entry.rounds,
+    historyId: entry.id
+  };
+  state.selected = new Set(entry.selectedVideoIds || entry.videos.filter(v => v.status === 'approved').map(v => v.id));
+  state.filter = 'approved';
+  $('topic').value = entry.topic;
+  $('historyDrawer').classList.add('hidden');
+  $('historyToggle').setAttribute('aria-expanded', 'false');
+  await chrome.storage.local.set({ lastSearch: state.result, selectedVideoIds: [...state.selected] });
+  renderResults();
+  showMessage(`Busca "${entry.topic}" carregada do histórico.`, true);
+}
+
+async function deleteFromHistory(id) {
+  state.history = removeHistoryEntry(state.history, id);
+  await persistHistory();
+  renderHistory();
+  renderResults();
+  showMessage('Busca removida do histórico.', true);
+}
+
+async function clearAllHistory() {
+  if (!state.history.length) return;
+  state.history = [];
+  await persistHistory();
+  renderHistory();
+  renderResults();
+  showMessage('Histórico de buscas limpo.', true);
+}
+
+async function saveCurrentSearchToHistory() {
+  if (!state.result) return;
+  const entry = createHistoryEntry(state.result, state.selected);
+  state.history = addHistoryEntry(state.history, entry);
+  await persistHistory();
+  renderHistory();
+  renderResults();
+  showMessage(`Busca "${entry.topic}" salva no histórico!`, true);
 }
 
 function setView(name) {
@@ -155,6 +255,15 @@ function renderVideo(video) {
 function renderResults() {
   const result = state.result;
   $('resultsSection').classList.toggle('hidden', !result);
+  const saveBtn = $('saveCurrentSearch');
+  if (saveBtn) {
+    saveBtn.classList.toggle('hidden', !result);
+    if (result) {
+      const saved = isCurrentSearchSaved();
+      saveBtn.textContent = saved ? 'Salva no histórico ✓' : 'Salvar busca';
+      saveBtn.disabled = saved;
+    }
+  }
   if (!result) { updateDock(); return; }
   $('resultTitle').textContent = result.topic;
   const approved = result.videos.filter(v => v.status === 'approved').length;
@@ -170,35 +279,6 @@ function renderResults() {
   warningBox.classList.toggle('hidden', !result.warnings.length);
   document.querySelectorAll('[data-filter]').forEach(button => button.classList.toggle('active', button.dataset.filter === state.filter));
   updateDock();
-}
-
-async function refreshNotebookTabs() {
-  const tabs = await chrome.tabs.query({});
-  const notebookTabs = tabs.filter(tab => parseNotebookUrl(tab.url));
-  const select = $('notebookTabs');
-  const previous = select.value;
-  select.replaceChildren();
-  for (const tab of notebookTabs) {
-    const option = element('option', '', tab.title?.slice(0, 55) || parseNotebookUrl(tab.url));
-    option.value = String(tab.id);
-    option.dataset.notebookUrl = parseNotebookUrl(tab.url);
-    select.append(option);
-  }
-  if (!select.options.length) {
-    const option = element('option', '', 'Nenhum notebook aberto');
-    option.value = '';
-    select.append(option);
-  }
-  if ([...select.options].some(option => option.value === previous)) select.value = previous;
-  if (state.importQueue) {
-    const target = findNotebookTab(notebookTabs, state.importQueue);
-    if (target) select.value = String(target.id);
-    else select.value = '';
-  }
-  const targetAvailable = state.importQueue ? Boolean(findNotebookTab(notebookTabs, state.importQueue)) : notebookTabs.length > 0;
-  $('notebookNotice').classList.toggle('hidden', targetAvailable);
-  $('notebookNotice').textContent = state.importQueue ? 'Abra o notebook de destino no Chrome para retomar a importação.' : 'Abra um notebook no Chrome antes de adicionar fontes.';
-  select.disabled = Boolean(state.importQueue);
 }
 
 function updatePendingNotice() {
@@ -238,49 +318,75 @@ function updateDock() {
   $('copyLinks').disabled = !state.result || state.selected.size === 0;
   updateLanguageControls();
   updatePendingNotice();
-  if (visible) refreshNotebookTabs().catch(() => {});
 }
 
-async function waitForTab(tabId, expectedUrl) {
-  for (let attempt = 0; attempt < 80; attempt++) {
-    const tab = await chrome.tabs.get(tabId);
-    if (parseNotebookUrl(tab.url) !== parseNotebookUrl(expectedUrl)) throw new Error('O notebook da aba mudou. Selecione novamente o destino antes de adicionar fontes.');
-    if (tab.status === 'complete') {
-      await wait(500);
-      const ready = await chrome.tabs.get(tabId);
-      if (parseNotebookUrl(ready.url) !== parseNotebookUrl(expectedUrl)) throw new Error('O notebook da aba mudou. Selecione novamente o destino antes de adicionar fontes.');
-      if (ready.status === 'complete') return ready;
+async function ensureTabReady(tabId) {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    try {
+      const ping = await chrome.tabs.sendMessage(tabId, { type: 'TUBELESS_PING' });
+      if (ping?.ok) return true;
+    } catch {
+      // Content script ainda carregando ou estabelecendo conexão
     }
-    await wait(250);
+    await wait(300);
   }
-  throw new Error('A aba do notebook não terminou de carregar. Abra o notebook e tente novamente.');
+  return true;
 }
 
 async function targetTab() {
+  const allTabs = await chrome.tabs.query({});
+
+  // 1. Se há uma fila de importação pendente, continuar no mesmo notebook
   if (state.importQueue) {
-    const tab = findNotebookTab(await chrome.tabs.query({}), state.importQueue);
-    if (!tab) throw new Error('O notebook de destino não está aberto. Abra-o no Chrome e retome a importação.');
-    return waitForTab(tab.id, state.importQueue.notebookUrl);
+    const tab = findNotebookTab(allTabs, state.importQueue);
+    if (!tab) throw new Error('O notebook original da importação pendente não está aberto. Abra-o no Chrome para continuar ou descarte a fila pendente.');
+    await ensureTabReady(tab.id);
+    return tab;
   }
-  const value = $('notebookTabs').value;
-  const expectedUrl = $('notebookTabs').selectedOptions[0]?.dataset.notebookUrl;
-  if (value) {
-    const tab = await chrome.tabs.get(Number(value));
-    if (!expectedUrl || parseNotebookUrl(tab.url) !== expectedUrl) throw new Error('O notebook da aba mudou. Selecione novamente o destino antes de adicionar fontes.');
-    return waitForTab(tab.id, expectedUrl);
+
+  // 2. Prioridade 1: Aba ativa na janela em foco (onde o usuário está navegando ao lado do painel lateral)
+  const activeTabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  const activeTab = activeTabs[0];
+  if (activeTab && parseNotebookUrl(activeTab.url)) {
+    await ensureTabReady(activeTab.id);
+    return activeTab;
   }
-  throw new Error('Nenhum notebook do NotebookLM está aberto. Abra um notebook no Chrome antes de adicionar fontes.');
+
+  // 3. Prioridade 2: Qualquer aba aberta que esteja em um caderno (/notebook/ID)
+  const projectTabs = allTabs.filter(tab => parseNotebookUrl(tab.url));
+  if (projectTabs.length > 0) {
+    const chosen = projectTabs.find(t => t.windowId === activeTab?.windowId) || projectTabs[0];
+    await ensureTabReady(chosen.id);
+    await chrome.tabs.update(chosen.id, { active: true }).catch(() => {});
+    return chosen;
+  }
+
+  // 4. Prioridade 3: Se há aba no site do NotebookLM, mas ainda na home (sem caderno aberto)
+  const siteTab = allTabs.find(tab => isNotebookSite(tab.url));
+  if (siteTab) {
+    await chrome.tabs.update(siteTab.id, { active: true }).catch(() => {});
+    if (siteTab.windowId) await chrome.windows.update(siteTab.windowId, { focused: true }).catch(() => {});
+    throw new Error('Você está no NotebookLM, mas nenhum caderno está aberto. Abra o projeto desejado para adicionar as fontes.');
+  }
+
+  // 5. Nenhuma aba do NotebookLM encontrada
+  throw new Error('Nenhuma aba do NotebookLM está aberta no Chrome. Clique em "Abrir NotebookLM" para entrar.');
 }
 
 async function sendToNotebook(tabId, videos, notebookUrl) {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try { return await chrome.tabs.sendMessage(tabId, { type: 'TUBELESS_IMPORT_BATCH', notebookUrl, videos: videos.map(video => ({ url: videoUrl(video.id), title: video.title })) }); }
-    catch (error) {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      return await chrome.tabs.sendMessage(tabId, {
+        type: 'TUBELESS_IMPORT_BATCH',
+        notebookUrl,
+        videos: videos.map(video => ({ url: videoUrl(video.id), title: video.title }))
+      });
+    } catch (error) {
       if (!/Receiving end does not exist|Could not establish connection/i.test(error.message)) throw error;
-      await wait(750);
+      await wait(800);
     }
   }
-  throw new Error('Não foi possível acessar a aba. Recarregue o NotebookLM e tente novamente.');
+  throw new Error('Não foi possível conectar à aba do NotebookLM. Recarregue a página do notebook e tente novamente.');
 }
 
 async function importSelected() {
@@ -360,6 +466,13 @@ async function startSearch(event, continuing = false) {
     state.selected = selected;
     state.filter = 'approved';
     $('topic').value = result.topic;
+    const shouldSave = $('saveSearchToggle')?.checked ?? true;
+    if (shouldSave) {
+      const entry = createHistoryEntry(result, selected);
+      state.history = addHistoryEntry(state.history, entry);
+      await persistHistory();
+      renderHistory();
+    }
     if (continuing) showMessage(batch.videos.length ? `${batch.videos.length} vídeo(s) novo(s) avaliados. Os relevantes foram selecionados.` : 'Nenhum vídeo novo nesta rodada. Seus resultados e a seleção foram mantidos.', batch.videos.length > 0);
     renderResults();
   } catch (error) {
@@ -383,10 +496,17 @@ function installEvents() {
   $('settingsBack').addEventListener('click', () => setView('research'));
   $('searchForm').addEventListener('submit', startSearch);
   $('cancelButton').addEventListener('click', () => state.controller?.abort());
+  $('historyToggle').addEventListener('click', () => {
+    const drawer = $('historyDrawer');
+    const isHidden = drawer.classList.toggle('hidden');
+    $('historyToggle').setAttribute('aria-expanded', String(!isHidden));
+  });
+  $('clearAllHistory').addEventListener('click', clearAllHistory);
+  $('saveCurrentSearch').addEventListener('click', saveCurrentSearchToHistory);
   $('languageOptions').addEventListener('change', event => {
     if (!event.target.matches('input[name="searchLanguage"]')) return;
     const languages = [...$('languageOptions').querySelectorAll('input:checked')].map(input => input.value);
-    if (state.controller || !languages.length || languages.length > 5) { renderLanguageChoices(); return; }
+    if (state.controller || !languages.length || languages.length > 20) { renderLanguageChoices(); return; }
     state.settings = { ...state.settings, languages: languages.join(',') };
     $('languages').value = state.settings.languages;
     updateLanguageControls();
@@ -423,7 +543,15 @@ function installEvents() {
     try { await navigator.clipboard.writeText(links); showMessage(`${links.split('\n').length} link(s) copiado(s).`, true); }
     catch { showMessage('Não foi possível copiar os links. Deixe o painel ativo e tente novamente.'); }
   });
-  $('clearResults').addEventListener('click', async () => { if (selectionLocked()) { showMessage('Conclua a busca ou descarte a fila pendente antes de limpar os resultados.'); return; } state.result = null; state.selected.clear(); await selectionWrite.catch(() => {}); await chrome.storage.local.remove(['lastSearch', 'selectedVideoIds']); renderResults(); });
+  $('clearResults').addEventListener('click', async () => {
+    if (selectionLocked()) { showMessage('Conclua a busca ou descarte a fila pendente antes de limpar os resultados.'); return; }
+    state.result = null;
+    state.selected.clear();
+    await selectionWrite.catch(() => {});
+    await chrome.storage.local.remove(['lastSearch', 'selectedVideoIds']);
+    renderResults();
+    showMessage('Pesquisa limpa da tela. Suas buscas salvas continuam disponíveis no Histórico.');
+  });
   $('pendingResume').addEventListener('click', () => { if (!state.result || state.importing || !state.importQueue) return; state.selected = new Set(state.importQueue.ids); state.filter = 'approved'; renderResults(); persistSelection().catch(error => showMessage(error.message)); importSelected(); });
   const reviewPendingSource = async confirmed => {
     if (state.importing || state.reviewing) return;
@@ -444,18 +572,25 @@ function installEvents() {
   };
   $('pendingConfirm').addEventListener('click', () => reviewPendingSource(true));
   $('pendingRetry').addEventListener('click', () => reviewPendingSource(false));
-  $('pendingDiscard').addEventListener('click', async () => { if (state.importing || state.reviewing) return; state.importQueue = null; state.selected.clear(); await chrome.storage.local.remove('importQueue'); await persistSelection(); showMessage('Fila descartada. Os resultados da pesquisa continuam disponíveis.', true); renderResults(); refreshNotebookTabs(); });
-  $('openNotebook').addEventListener('click', async () => { await chrome.tabs.create({ url: state.importQueue?.notebookUrl || state.settings.notebookUrl || 'https://notebook.google.com/', active: true }); await refreshNotebookTabs(); });
+  $('pendingDiscard').addEventListener('click', async () => { if (state.importing || state.reviewing) return; state.importQueue = null; state.selected.clear(); await chrome.storage.local.remove('importQueue'); await persistSelection(); showMessage('Fila descartada. Os resultados da pesquisa continuam disponíveis.', true); renderResults(); });
+  $('openNotebook').addEventListener('click', async () => {
+    const tabs = await chrome.tabs.query({});
+    const existing = tabs.find(tab => isNotebookSite(tab.url));
+    if (existing) {
+      await chrome.tabs.update(existing.id, { active: true }).catch(() => {});
+      if (existing.windowId) await chrome.windows.update(existing.windowId, { focused: true }).catch(() => {});
+    } else {
+      await chrome.tabs.create({ url: state.importQueue?.notebookUrl || 'https://notebooklm.google.com/', active: true });
+    }
+  });
   $('importButton').addEventListener('click', importSelected);
-  chrome.tabs.onCreated.addListener(() => refreshNotebookTabs().catch(() => {}));
-  chrome.tabs.onRemoved.addListener(() => refreshNotebookTabs().catch(() => {}));
-  chrome.tabs.onUpdated.addListener((_tabId, change) => { if (change.url || change.status === 'complete') refreshNotebookTabs().catch(() => {}); });
 }
 
 async function init() {
-  const stored = await chrome.storage.local.get(['settings', 'lastSearch', 'importQueue', 'selectedVideoIds']);
+  const stored = await chrome.storage.local.get(['settings', 'lastSearch', 'importQueue', 'selectedVideoIds', 'searchHistory']);
   state.settings = normalizeSettings(stored.settings || {});
   state.settings.languages = (parseLanguages(state.settings.languages).length ? parseLanguages(state.settings.languages) : parseLanguages(DEFAULT_SETTINGS.languages)).join(',');
+  state.history = Array.isArray(stored.searchHistory) ? stored.searchHistory : [];
   state.result = stored.lastSearch || null;
   state.importQueue = stored.importQueue || null;
   state.selected = selectionForResult(state.result, stored.selectedVideoIds);
@@ -464,10 +599,10 @@ async function init() {
     state.selected = new Set(state.importQueue.ids);
     if (state.selected.size) showMessage('Há uma importação pendente. Revise a seleção e clique em Adicionar fontes para retomar.');
   }
+  renderHistory();
   fillSettings();
   updateSetup();
   renderResults();
-  await refreshNotebookTabs();
   installEvents();
 }
 

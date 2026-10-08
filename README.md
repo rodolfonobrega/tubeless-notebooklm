@@ -7,17 +7,19 @@ O TubeLess faz a descoberta e a seleção de vídeos. O NotebookLM processa as f
 ## Recursos
 
 - Geração de termos variados por idioma, com seleção rápida de idiomas no painel.
-- Busca pública no YouTube sem chave obrigatória; API oficial opcional.
+- Busca pública no YouTube sem chave obrigatória com retries automáticos; API oficial opcional.
 - Geração e avaliação com provedores, modelos e chaves independentes.
-- Até 250 avaliações por rodada e de 1 a 16 chamadas simultâneas.
+- Histórico local de pesquisas com restauração rápida de termos e vídeos selecionados.
+- Segurança reforçada: chaves de API sempre protegidas, com conferência apenas por prefixo e sufixo mascarados.
+- Até 1.000 avaliações por rodada e de 1 a 32 chamadas simultâneas.
 - Vídeos ordenados por relevância, seleção automática dos aprovados e cópia de links.
 - Continuação da pesquisa com termos novos e preservação da seleção anterior.
-- Importação dos links selecionados em lote, confirmação individual e retomada após revisão.
+- Importação direta no NotebookLM em lote, confirmação individual e retomada após revisão.
 - Identificação dos controles do notebook pelo avaliador quando a localização normal falha.
 
 ## Instalar
 
-1. Baixe `TubeLess-1.3.0.zip` na [release v1.3.0](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/tag/v1.3.0) e extraia em uma pasta permanente.
+1. Baixe `TubeLess-1.4.0.zip` na [release v1.4.0](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/tag/v1.4.0) e extraia em uma pasta permanente.
 2. Abra `chrome://extensions` no Google Chrome.
 3. Ative **Modo do desenvolvedor** e clique em **Carregar sem compactação**.
 4. Selecione a pasta extraída que contém `manifest.json`.

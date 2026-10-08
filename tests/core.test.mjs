@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeTerms, uniqueVideos, normalizeSettings, parseNotebookUrl, DEFAULT_SETTINGS, sortVideosByRelevance } from '../core/search.js';
+import { normalizeTerms, uniqueVideos, normalizeSettings, parseNotebookUrl, isNotebookSite, DEFAULT_SETTINGS, sortVideosByRelevance } from '../core/search.js';
 import { buildDecisionRequest, readDecision } from '../core/providers.js';
 
 test('limita e deduplica consultas por idioma, mantendo o tema como reserva', () => {
@@ -31,19 +31,19 @@ test('ordena do maior grau de relevância ao menor e deixa sem avaliação no fi
   assert.equal(videos[0].id, 'zero');
 });
 
-test('configuração restringe custos e não aceita modelos de decisão como expansor', () => {
-  const value = normalizeSettings({ termsPerLanguage: 99, resultsPerTerm: 99, maxEvaluations: 999, threshold: 2, expansionModel: 'typesafe/jev-1.13' });
-  assert.equal(value.termsPerLanguage, 5);
-  assert.equal(value.resultsPerTerm, 25);
-  assert.equal(value.maxEvaluations, 250);
+test('configuração aceita limites expandidos e não aceita modelos de decisão como expansor', () => {
+  const value = normalizeSettings({ termsPerLanguage: 99, resultsPerTerm: 99, maxEvaluations: 9999, threshold: 2, expansionModel: 'typesafe/jev-1.13' });
+  assert.equal(value.termsPerLanguage, 20);
+  assert.equal(value.resultsPerTerm, 50);
+  assert.equal(value.maxEvaluations, 1000);
   assert.equal(value.threshold, 0.95);
   assert.equal(value.expansionModel, DEFAULT_SETTINGS.expansionModel);
 });
 
-test('avaliação aceita 250 vídeos e mantém o paralelismo entre 1 e 16', () => {
-  assert.equal(normalizeSettings({ maxEvaluations: 250 }).maxEvaluations, 250);
+test('avaliação aceita até 1000 vídeos e mantém o paralelismo entre 1 e 32', () => {
+  assert.equal(normalizeSettings({ maxEvaluations: 1000 }).maxEvaluations, 1000);
   assert.equal(normalizeSettings({}).evaluationConcurrency, 8);
-  assert.equal(normalizeSettings({ evaluationConcurrency: 100 }).evaluationConcurrency, 16);
+  assert.equal(normalizeSettings({ evaluationConcurrency: 100 }).evaluationConcurrency, 32);
   assert.equal(normalizeSettings({ evaluationConcurrency: 0 }).evaluationConcurrency, 1);
   assert.equal(normalizeSettings({ evaluationConcurrency: 'inválido' }).evaluationConcurrency, 8);
 });
@@ -53,6 +53,11 @@ test('aceita apenas URLs de notebook pessoal dos domínios Google esperados', ()
   assert.equal(parseNotebookUrl('https://notebooklm.google.com/notebook/abc-123'), 'https://notebook.google.com/notebook/abc-123');
   assert.equal(parseNotebookUrl('https://evil.example/notebook/abc-123'), null);
   assert.equal(parseNotebookUrl('https://notebook.google.com/'), null);
+  assert.equal(isNotebookSite('https://notebooklm.google.com/'), true);
+  assert.equal(isNotebookSite('https://notebooklm.google.com/notebook/abc-123'), true);
+  assert.equal(isNotebookSite('https://notebook.google.com/'), true);
+  assert.equal(isNotebookSite('https://google.com/'), false);
+  assert.equal(isNotebookSite('https://evil.example/notebook/abc-123'), false);
 });
 
 test('Jev recebe evidências textuais e responde por probabilidade tipada', () => {

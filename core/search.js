@@ -12,9 +12,9 @@ export const DEFAULT_SETTINGS = Object.freeze({
   expansionModel: LLM_PRESETS.openai.model,
   jevModel: 'typesafe/jev-1.13',
   languages: 'pt,en',
-  termsPerLanguage: 3,
-  resultsPerTerm: 8,
-  maxEvaluations: 24,
+  termsPerLanguage: 5,
+  resultsPerTerm: 15,
+  maxEvaluations: 100,
   evaluationConcurrency: 8,
   threshold: 0.7,
   captionedOnly: true,
@@ -42,10 +42,10 @@ export function normalizeSettings(raw = {}) {
     expansionModel: !expansionModel || /(^|\/)jev(?:-|$)/i.test(expansionModel) ? DEFAULT_SETTINGS.expansionModel : expansionModel,
     jevModel: String(value.jevModel || '').trim() || DEFAULT_SETTINGS.jevModel,
     languages: String(value.languages || 'pt,en').trim(),
-    termsPerLanguage: Math.round(clamp(value.termsPerLanguage, 3, 1, 5)),
-    resultsPerTerm: Math.round(clamp(value.resultsPerTerm, 8, 1, 25)),
-    maxEvaluations: Math.round(clamp(value.maxEvaluations, 24, 1, 250)),
-    evaluationConcurrency: Math.round(clamp(value.evaluationConcurrency, 8, 1, 16)),
+    termsPerLanguage: Math.round(clamp(value.termsPerLanguage, 5, 1, 20)),
+    resultsPerTerm: Math.round(clamp(value.resultsPerTerm, 15, 1, 50)),
+    maxEvaluations: Math.round(clamp(value.maxEvaluations, 100, 1, 1000)),
+    evaluationConcurrency: Math.round(clamp(value.evaluationConcurrency, 8, 1, 32)),
     threshold: Math.round(clamp(value.threshold, 0.7, 0.05, 0.95) * 100) / 100,
     captionedOnly: value.captionedOnly !== false,
     notebookUrl: parseNotebookUrl(value.notebookUrl) || ''
@@ -53,7 +53,7 @@ export function normalizeSettings(raw = {}) {
 }
 
 export function parseLanguages(input) {
-  return [...new Set(String(input || '').split(/[,;\s]+/).map(s => s.trim().toLowerCase()).filter(s => /^[a-z]{2}(?:-[a-z]{2})?$/.test(s)))].slice(0, 5);
+  return [...new Set(String(input || '').split(/[,;\s]+/).map(s => s.trim().toLowerCase()).filter(s => /^[a-z]{2}(?:-[a-z]{2})?$/.test(s)))].slice(0, 20);
 }
 
 export function normalizeTerms(raw, languages, perLanguage, fallback) {
@@ -102,6 +102,15 @@ export function parseNotebookUrl(input) {
     return match ? `https://notebook.google.com/notebook/${match[1]}` : null;
   } catch {
     return null;
+  }
+}
+
+export function isNotebookSite(input) {
+  try {
+    const url = new URL(String(input || '').trim());
+    return url.protocol === 'https:' && ['notebook.google.com', 'notebooklm.google.com'].includes(url.hostname);
+  } catch {
+    return false;
   }
 }
 

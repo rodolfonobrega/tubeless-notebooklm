@@ -1,9 +1,9 @@
 import { normalizeSettings, parseLanguages, parseNotebookUrl } from './core/search.js';
-import { LLM_PRESETS, EVALUATION_PRESETS, requiredApiOrigins, sanitizeError } from './core/connections.js';
+import { LLM_PRESETS, EVALUATION_PRESETS, requiredApiOrigins, sanitizeError, maskSecretKey } from './core/connections.js';
 import { testConnections } from './core/diagnostics.js';
 import { ModelCatalog, modelsForConnection } from './core/models.js';
 
-const fields = ['llmBaseUrl', 'llmApiKey', 'expansionModel', 'evaluationBaseUrl', 'evaluationApiKey', 'evaluationProtocol', 'jevModel', 'youtubeMode', 'youtubeKey', 'languages', 'termsPerLanguage', 'resultsPerTerm', 'maxEvaluations', 'evaluationConcurrency', 'threshold', 'captionedOnly', 'notebookUrl'];
+const fields = ['llmBaseUrl', 'llmApiKey', 'expansionModel', 'evaluationBaseUrl', 'evaluationApiKey', 'evaluationProtocol', 'jevModel', 'youtubeMode', 'youtubeKey', 'languages', 'termsPerLanguage', 'resultsPerTerm', 'maxEvaluations', 'evaluationConcurrency', 'threshold', 'captionedOnly'];
 const $ = id => document.getElementById(id);
 
 export function requestApiPermissions(settings) {
@@ -19,16 +19,29 @@ export class SettingsPanel {
   fill(settings) {
     for (const field of fields) {
       const input = $(field);
+      if (!input) continue;
       if (input.type === 'checkbox') input.checked = Boolean(settings[field]);
       else input.value = settings[field];
     }
     this.syncPresets();
     this.syncYouTube();
     $('thresholdValue').textContent = `${Math.round(settings.threshold * 100)}%`;
+    this.updateKeyPreviews();
+  }
+
+  updateKeyPreviews() {
+    document.querySelectorAll('[data-reveal]').forEach(button => {
+      const fieldId = button.dataset.reveal;
+      const input = $(fieldId);
+      const preview = $(`${fieldId}Preview`);
+      if (input && preview && !preview.classList.contains('hidden')) {
+        preview.textContent = maskSecretKey(input.value);
+      }
+    });
   }
 
   read() {
-    const raw = Object.fromEntries(fields.map(field => [field, $(field).type === 'checkbox' ? $(field).checked : $(field).value]));
+    const raw = Object.fromEntries(fields.filter(field => $(field)).map(field => [field, $(field).type === 'checkbox' ? $(field).checked : $(field).value]));
     if (raw.notebookUrl && !parseNotebookUrl(raw.notebookUrl)) throw new Error('Cole o link de um notebook, terminado em /notebook/ID.');
     if (!parseLanguages(raw.languages).length) throw new Error('Informe pelo menos um idioma válido, como pt,en.');
     if (!raw.llmBaseUrl.trim() || !raw.evaluationBaseUrl.trim()) throw new Error('Informe a URL base de cada conexão.');
@@ -184,10 +197,33 @@ export class SettingsPanel {
     $('settingsForm').addEventListener('input', () => this.clearResults());
     $('testConnections').addEventListener('click', () => this.test());
     $('threshold').addEventListener('input', () => { $('thresholdValue').textContent = `${Math.round(Number($('threshold').value) * 100)}%`; });
-    document.querySelectorAll('[data-reveal]').forEach(button => button.addEventListener('click', () => {
-      const input = $(button.dataset.reveal);
-      input.type = input.type === 'password' ? 'text' : 'password';
-      button.setAttribute('aria-label', input.type === 'password' ? 'Mostrar chave' : 'Ocultar chave');
-    }));
+    document.querySelectorAll('[data-reveal]').forEach(button => {
+      const fieldId = button.dataset.reveal;
+      const input = $(fieldId);
+      const preview = $(`${fieldId}Preview`);
+      if (!input || !preview) return;
+
+      const updatePreview = () => {
+        if (!preview.classList.contains('hidden')) {
+          preview.textContent = maskSecretKey(input.value);
+        }
+      };
+
+      input.addEventListener('input', updatePreview);
+
+      button.addEventListener('click', () => {
+        const isHidden = preview.classList.contains('hidden');
+        if (isHidden) {
+          preview.textContent = maskSecretKey(input.value);
+          preview.classList.remove('hidden');
+          button.classList.add('active');
+          button.setAttribute('aria-label', 'Ocultar conferência da chave');
+        } else {
+          preview.classList.add('hidden');
+          button.classList.remove('active');
+          button.setAttribute('aria-label', 'Verificar início e fim da chave');
+        }
+      });
+    });
   }
 }

@@ -52,15 +52,23 @@ export async function runDiscovery({ topic, settings, previousResult, fetchImpl 
   if (!terms.length) throw new Error('O modelo não gerou termos novos. Os resultados anteriores foram mantidos. Tente novamente ou ajuste os idiomas.');
 
   onProgress({ phase: 'searching', completed: 0, total: terms.length });
-  const searched = await mapLimit(terms, 4, doSearch, signal, (completed, total) => onProgress({ phase: 'searching', completed, total }));
+  const searchConcurrency = settings.youtubeMode === 'web' ? 2 : 4;
+  const searched = await mapLimit(terms, searchConcurrency, doSearch, signal, (completed, total) => onProgress({ phase: 'searching', completed, total }));
   const found = [];
   const searchErrors = [];
   searched.forEach((outcome, index) => {
     if (outcome.status === 'fulfilled') found.push(...outcome.value);
     else searchErrors.push(`${terms[index].query}: ${outcome.reason?.message || 'erro'}`);
   });
-  if (searchErrors.length) warnings.push(`${searchErrors.length} busca(s) falharam: ${searchErrors.join(' | ')}`);
-  if (!found.length && (!previousResult || searchErrors.length)) throw new Error(searchErrors.length ? `Nenhuma busca concluiu com vídeos. ${searchErrors[0]}` : 'Nenhum vídeo encontrado para este tema.');
+  if (searchErrors.length) {
+    const isBlockOrConsent = searchErrors.some(err => /consentimento|bloqueio|Failed to fetch/i.test(err));
+    const tip = isBlockOrConsent && settings.youtubeMode === 'web' ? ' (Dica: o YouTube público pode impor restrições temporárias a requisições anônimas. Tente novamente em alguns segundos ou ative a API oficial nas configurações).' : '';
+    warnings.push(`${searchErrors.length} busca(s) falharam: ${searchErrors.join(' | ')}${tip}`);
+  }
+  if (!found.length && (!previousResult || searchErrors.length)) {
+    const firstReason = searchErrors[0] || 'Nenhum vídeo encontrado para este tema.';
+    throw new Error(searchErrors.length ? `Nenhuma busca concluiu com vídeos. ${firstReason}` : firstReason);
+  }
 
   const discovered = uniqueVideos(found);
   const discoveredIds = discovered.map(video => video.id);
@@ -112,7 +120,11 @@ export async function runDiscovery({ topic, settings, previousResult, fetchImpl 
     return { ...video, status: decision.value.accepted ? 'approved' : 'rejected', probability: decision.value.probability, evaluationError: '' };
   }));
   if (unique.length > candidates.length) warnings.push(`${unique.length - candidates.length} vídeo(s) ficaram fora do limite de avaliação configurado.`);
-  if (evaluated.some(video => video.status === 'error')) warnings.push('Alguns vídeos não puderam ser avaliados; revise os resultados.');
+  const evalErrors = evaluated.filter(video => video.status === 'error');
+  if (evalErrors.length) {
+    const reason = evalErrors[0]?.evaluationError ? `: ${evalErrors[0].evaluationError}` : '';
+    warnings.push(`${evalErrors.length} vídeo(s) não puderam ser avaliados${reason}; revise os resultados.`);
+  }
   onProgress({ phase: 'done', completed: evaluated.length, total: evaluated.length });
   return { topic: cleanTopic, terms, videos: evaluated, warnings, discoveredCount: discovered.length, discoveredIds };
 }

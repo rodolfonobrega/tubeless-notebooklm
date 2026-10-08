@@ -23,14 +23,35 @@
           <p>Encontre vídeos sobre um tema e adicione os que interessam ao seu notebook.</p>
         </div>
 
+        <div class="history-bar">
+          <button id="historyToggle" class="secondary-button history-toggle" type="button" aria-expanded="false" title="Ver buscas anteriores salvas">
+            <span>📜 Buscas salvas</span>
+            <span id="historyBadge" class="history-badge hidden">0</span>
+          </button>
+        </div>
+
+        <div id="historyDrawer" class="history-drawer hidden" aria-label="Histórico de pesquisas">
+          <div class="history-header">
+            <strong>Buscas salvas neste Chrome</strong>
+            <button id="clearAllHistory" class="text-button" type="button">Limpar histórico</button>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </div>
+
         <form id="searchForm" class="search-form">
           <label for="topic">Tema da pesquisa</label>
           <textarea id="topic" rows="3" maxlength="400" placeholder="Ex.: como funcionam baterias de estado sólido?"></textarea>
           <fieldset id="languagePicker" class="language-picker" aria-describedby="languageHint">
             <legend>Idiomas da pesquisa</legend>
             <div id="languageOptions" class="language-options"></div>
-            <p id="languageHint" class="field-hint">Selecione de 1 a 5 idiomas.</p>
+            <p id="languageHint" class="field-hint">Selecione de 1 a 20 idiomas.</p>
           </fieldset>
+          <div class="save-option-wrap">
+            <label class="check-inline">
+              <input type="checkbox" id="saveSearchToggle" checked>
+              <span>Salvar esta busca no histórico</span>
+            </label>
+          </div>
           <div class="search-footer"><span>Busca em vários idiomas</span><button id="searchButton" class="primary-button" type="submit"><span class="button-icon">⌕</span> Pesquisar</button></div>
         </form>
 
@@ -40,7 +61,13 @@
         <div id="messageBox" class="message-box hidden" role="alert"></div>
 
         <section id="resultsSection" class="results-section hidden" aria-label="Resultados">
-          <div class="section-heading"><div><div class="eyebrow">RESULTADOS</div><h2 id="resultTitle">Vídeos encontrados</h2><p id="resultSummary"></p></div><button id="clearResults" class="text-button" type="button">Limpar</button></div>
+          <div class="section-heading">
+            <div><div class="eyebrow">RESULTADOS</div><h2 id="resultTitle">Vídeos encontrados</h2><p id="resultSummary"></p></div>
+            <div class="heading-actions">
+              <button id="saveCurrentSearch" class="text-button hidden" type="button" title="Salvar estes resultados no histórico">Salvar busca</button>
+              <button id="clearResults" class="text-button" type="button">Limpar</button>
+            </div>
+          </div>
           <div id="termList" class="term-list"></div>
           <p class="results-order">Mais relevantes primeiro</p><div class="result-toolbar"><div class="segmented"><button class="active" data-filter="approved" type="button">Relevantes</button><button data-filter="all" type="button">Todos</button></div><div class="selection-actions"><button id="selectAll" type="button" class="text-button">Selecionar todos</button><button id="deselectAll" type="button" class="text-button">Desmarcar tudo</button></div></div>
           <div class="result-actions"><button id="copyLinks" type="button" class="secondary-button">Copiar links selecionados</button><button id="continueSearch" type="button" class="secondary-button">Continuar buscando</button></div>
@@ -58,30 +85,29 @@
           <div class="form-group connection-card"><div class="group-heading"><span class="group-number">01</span><div><h2>Geração de buscas</h2><p>Escolha o serviço que cria os termos da pesquisa.</p></div></div>
             <label for="llmPreset">Provedor</label><select id="llmPreset"><option value="openai">OpenAI</option><option value="groq">Groq</option><option value="deepseek">DeepSeek</option><option value="openrouter">OpenRouter</option><option value="custom">Outro / personalizado</option></select>
             <div class="label-with-action"><label for="llmBaseUrl">URL base</label><button id="resetLlmBase" type="button" class="text-button">Restaurar OpenAI</button></div><input id="llmBaseUrl" type="url" required spellcheck="false" placeholder="https://api.openai.com/v1">
-            <label for="llmApiKey">Chave de acesso</label><div class="password-wrap"><input id="llmApiKey" type="password" autocomplete="off" placeholder="Chave deste provedor"><button type="button" data-reveal="llmApiKey" aria-label="Mostrar chave">◉</button></div>
+            <label for="llmApiKey">Chave de acesso</label><div class="password-wrap"><input id="llmApiKey" type="password" autocomplete="off" placeholder="Chave deste provedor"><button type="button" data-reveal="llmApiKey" aria-label="Verificar início e fim da chave" title="Verificar início e fim da chave">◉</button></div>
+            <div id="llmApiKeyPreview" class="key-preview hidden" aria-live="polite"></div>
             <label for="llmModelChoice">Modelo</label><select id="llmModelChoice" aria-label="Modelos para geração de buscas"><option value="">Nome personalizado</option></select><input id="expansionModel" class="model-name" type="text" required spellcheck="false" placeholder="Digite o nome do modelo" aria-label="Nome do modelo de geração"><p class="field-hint">Escolha na lista ou digite o nome desejado.</p>
           </div>
           <div class="form-group connection-card"><div class="group-heading"><span class="group-number">02</span><div><h2>Avaliação de vídeos</h2><p>Esta conexão pode usar outro provedor e outra chave.</p></div></div>
             <label for="evaluationPreset">Provedor</label><select id="evaluationPreset"><option value="openrouter">OpenRouter</option><option value="typesafe">TypeSafe</option><option value="openai">OpenAI</option><option value="groq">Groq</option><option value="deepseek">DeepSeek</option><option value="custom">Outro / personalizado</option></select>
             <div class="label-with-action"><label for="evaluationBaseUrl">URL base</label><button id="resetEvaluationBase" type="button" class="text-button">Restaurar URL</button></div><input id="evaluationBaseUrl" type="url" required spellcheck="false" placeholder="https://openrouter.ai/api/alpha">
-            <label for="evaluationApiKey">Chave de acesso</label><div class="password-wrap"><input id="evaluationApiKey" type="password" autocomplete="off" placeholder="Chave deste provedor"><button type="button" data-reveal="evaluationApiKey" aria-label="Mostrar chave">◉</button></div>
+            <label for="evaluationApiKey">Chave de acesso</label><div class="password-wrap"><input id="evaluationApiKey" type="password" autocomplete="off" placeholder="Chave deste provedor"><button type="button" data-reveal="evaluationApiKey" aria-label="Verificar início e fim da chave" title="Verificar início e fim da chave">◉</button></div>
+            <div id="evaluationApiKeyPreview" class="key-preview hidden" aria-live="polite"></div>
             <label for="evaluationModelChoice">Modelo</label><select id="evaluationModelChoice" aria-label="Modelos para avaliação de vídeos"><option value="">Nome personalizado</option></select><input id="jevModel" class="model-name" type="text" required spellcheck="false" placeholder="Digite o nome do modelo" aria-label="Nome do modelo de avaliação"><p class="field-hint">Escolha na lista ou digite o nome desejado.</p>
             <label for="evaluationProtocol">Formato da chamada</label><select id="evaluationProtocol"><option value="decisions">Decisions</option><option value="systemone">System One</option><option value="chat">Chat Completions</option></select>
             <label for="threshold">Relevância mínima: <output id="thresholdValue">70%</output></label><input id="threshold" type="range" min="0.05" max="0.95" step="0.05"><p class="field-hint">Vídeos abaixo desse valor ficam na lista Todos.</p>
           </div>
           <div class="form-group"><div class="group-heading"><span class="group-number">03</span><div><h2>YouTube</h2><p>Pesquise diretamente, sem precisar de chave.</p></div></div>
             <label for="youtubeMode">Tipo de busca</label><select id="youtubeMode"><option value="web">Sem chave de API</option><option value="api">API oficial do YouTube</option></select>
-            <div id="youtubeKeyField" class="hidden"><label for="youtubeKey">Chave do YouTube</label><div class="password-wrap"><input id="youtubeKey" type="password" autocomplete="off" placeholder="AIza..."><button type="button" data-reveal="youtubeKey" aria-label="Mostrar chave">◉</button></div></div>
+            <div id="youtubeKeyField" class="hidden"><label for="youtubeKey">Chave do YouTube</label><div class="password-wrap"><input id="youtubeKey" type="password" autocomplete="off" placeholder="AIza..."><button type="button" data-reveal="youtubeKey" aria-label="Verificar início e fim da chave" title="Verificar início e fim da chave">◉</button></div><div id="youtubeKeyPreview" class="key-preview hidden" aria-live="polite"></div></div>
             <label class="check-row"><input id="captionedOnly" type="checkbox"><span><strong>Somente vídeos com legendas</strong><small>Recomendado para o NotebookLM.</small></span></label>
           </div>
           <div class="form-group"><div class="group-heading"><span class="group-number">04</span><div><h2>Alcance da busca</h2><p>Ajuste os idiomas e a quantidade de vídeos.</p></div></div>
             <label for="languages">Idiomas <span class="label-hint">códigos separados por vírgula</span></label><input id="languages" type="text" spellcheck="false" placeholder="pt,en,es">
-            <div class="field-grid"><div><label for="termsPerLanguage">Termos por idioma</label><input id="termsPerLanguage" type="number" min="1" max="5"></div><div><label for="resultsPerTerm">Vídeos por termo</label><input id="resultsPerTerm" type="number" min="1" max="25"></div></div>
-            <label for="maxEvaluations">Máximo de vídeos avaliados por rodada</label><input id="maxEvaluations" type="number" min="1" max="250" required><p class="field-hint">Até 250 vídeos por rodada, conforme os resultados encontrados.</p>
-            <label for="evaluationConcurrency">Avaliações simultâneas</label><input id="evaluationConcurrency" type="number" min="1" max="16" required><p class="field-hint">De 1 a 16 chamadas em paralelo. Reduza se o provedor limitar as chamadas.</p>
-          </div>
-          <div class="form-group"><div class="group-heading"><span class="group-number">05</span><div><h2>Notebook de destino</h2><p>Abra o notebook no Chrome ou cole seu link.</p></div></div>
-            <label for="notebookUrl">Link do notebook</label><input id="notebookUrl" type="url" spellcheck="false" placeholder="https://notebook.google.com/notebook/..."><p class="field-hint">Abra o notebook no Chrome antes de adicionar os vídeos.</p>
+            <div class="field-grid"><div><label for="termsPerLanguage">Termos por idioma</label><input id="termsPerLanguage" type="number" min="1" max="20"></div><div><label for="resultsPerTerm">Vídeos por termo</label><input id="resultsPerTerm" type="number" min="1" max="50"></div></div>
+            <label for="maxEvaluations">Máximo de vídeos avaliados por rodada</label><input id="maxEvaluations" type="number" min="1" max="1000" required><p class="field-hint">Até 1.000 vídeos por rodada, conforme os resultados encontrados.</p>
+            <label for="evaluationConcurrency">Avaliações simultâneas</label><input id="evaluationConcurrency" type="number" min="1" max="32" required><p class="field-hint">De 1 a 32 chamadas em paralelo. Ajuste conforme os limites do seu provedor.</p>
           </div>
           <div class="settings-actions"><p>O teste faz chamadas reais e pode consumir créditos.</p><div><button id="testConnections" class="secondary-button" type="button">Testar conexões</button><button id="saveSettings" class="primary-button" type="submit">Salvar</button></div></div>
         </form>
@@ -89,7 +115,7 @@
     </main>
   </div>
 
-  <div id="importDock" class="import-dock hidden"><div class="dock-inner"><div class="dock-heading"><div><span class="dock-kicker">ADICIONAR AO NOTEBOOK</span><strong><span id="selectedCount">0</span> vídeos selecionados</strong></div><button id="dockClose" type="button" class="icon-button" aria-label="Fechar seleção">×</button></div><label for="notebookTabs">Notebook de destino</label><select id="notebookTabs"></select><p id="notebookNotice" class="field-hint hidden" role="status"></p><div class="dock-actions"><button id="openNotebook" type="button" class="secondary-button">Abrir notebook</button><button id="importButton" type="button" class="primary-button">Adicionar fontes →</button></div><div id="importProgress" class="import-progress hidden" role="status" aria-live="polite"></div></div></div>
+  <div id="importDock" class="import-dock hidden"><div class="dock-inner"><div class="dock-heading"><div><span class="dock-kicker">ADICIONAR AO NOTEBOOK</span><strong><span id="selectedCount">0</span> vídeos selecionados</strong></div><button id="dockClose" type="button" class="icon-button" aria-label="Fechar seleção">×</button></div><div class="dock-actions"><button id="openNotebook" type="button" class="secondary-button">Abrir NotebookLM</button><button id="importButton" type="button" class="primary-button">Adicionar fontes →</button></div><div id="importProgress" class="import-progress hidden" role="status" aria-live="polite"></div></div></div>
 
   <script type="module" src="panel.js"></script>
 </body>

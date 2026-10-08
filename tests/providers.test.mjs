@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { expandQueries, searchYouTube, enrichYouTube, assessVideo } from '../core/providers.js';
+import { expandQueries, searchYouTube, enrichYouTube, assessVideo, checkRecencyConstraint } from '../core/providers.js';
 
 const ok = value => ({ ok: true, json: async () => value });
 const settings = { openRouterKey: 'test-key', youtubeKey: 'test-yt', expansionModel: 'google/gemini-2.5-flash', jevModel: 'typesafe/jev-1.13', languageList: ['pt', 'en'], termsPerLanguage: 2, resultsPerTerm: 8, captionedOnly: true, threshold: 0.7 };
@@ -66,4 +66,24 @@ test('expansão da continuação orienta novos ângulos e informa termos já usa
 test('termos antigos retornados pelo modelo não consomem o limite de consultas novas', async () => {
   const terms = await expandQueries('energia', { ...settings, termsPerLanguage: 1 }, async () => ok({ choices: [{ message: { content: '{"pt":["antigo","novo"],"en":["old","new"]}' } }] }), undefined, { previousTerms: [{ language: 'pt', query: 'antigo' }, { language: 'en', query: 'old' }], round: 2 });
   assert.deepEqual(terms.map(term => term.query), ['novo', 'new']);
+});
+
+test('restrição de recência penaliza e rejeita vídeos de anos anteriores quando solicitados recentes', async () => {
+  const recentTopic = 'Engenharia reversa com LLM, considere apenas vídeos recentes';
+  const normalTopic = 'Curso de SketchUp iniciante';
+  const oldVideo = { title: 'Reverse engineering with GPT-4', description: 'Decompiling binaries', publishedAt: '2023-04-10T12:00:00Z' };
+  const newVideo = { title: 'Reverse engineering with Claude', description: 'Modern binary analysis', publishedAt: new Date().toISOString() };
+
+  assert.equal(checkRecencyConstraint(normalTopic, oldVideo).restricted, false);
+  assert.equal(checkRecencyConstraint(recentTopic, oldVideo).restricted, true);
+  assert.equal(checkRecencyConstraint(recentTopic, oldVideo).allowed, false);
+  assert.equal(checkRecencyConstraint(recentTopic, newVideo).allowed, true);
+
+  const decisionOld = await assessVideo(recentTopic, oldVideo, settings, async () => ok({ answers: { relevant: { type: 'noul', noul: 0.88 } } }));
+  assert.equal(decisionOld.accepted, false);
+  assert.ok(decisionOld.probability <= 0.15);
+
+  const decisionNew = await assessVideo(recentTopic, newVideo, settings, async () => ok({ answers: { relevant: { type: 'noul', noul: 0.88 } } }));
+  assert.equal(decisionNew.accepted, true);
+  assert.equal(decisionNew.probability, 0.88);
 });

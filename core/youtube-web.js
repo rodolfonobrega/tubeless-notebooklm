@@ -202,7 +202,7 @@ export function parseYouTubeSearchHtml(html, term, settings = {}) {
     if (renderer || node.lockupViewModel || node.shortsLockupViewModel || node.reelItemRenderer) return false;
   });
   if (!results.size && !recognized && !message && !emptySection) throw fail('formato dos resultados desconhecido; a página pode ter mudado');
-  const limit = Math.max(1, Math.min(25, Math.round(Number(settings.resultsPerTerm) || 8)));
+  const limit = Math.max(1, Math.min(50, Math.round(Number(settings.resultsPerTerm) || 15)));
   return [...results.values()].slice(0, limit);
 }
 
@@ -281,7 +281,15 @@ async function publicPage(url, fetchImpl, signal) {
   const requestSignal = signal ? AbortSignal.any([signal, timeout]) : timeout;
   let response;
   try {
-    response = await fetchImpl(url, { credentials: 'omit', redirect: 'error', headers: { Accept: 'text/html' }, signal: requestSignal });
+    response = await fetchImpl(url, {
+      credentials: 'include',
+      redirect: 'follow',
+      headers: {
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7'
+      },
+      signal: requestSignal
+    });
   } catch (error) {
     signal?.throwIfAborted();
     if (timeout.aborted) throw fail('a página demorou demais para responder');
@@ -290,7 +298,9 @@ async function publicPage(url, fetchImpl, signal) {
   requestSignal.throwIfAborted();
   if (response.url) {
     const final = new URL(response.url);
-    if (final.protocol !== 'https:' || !(final.hostname === 'youtube.com' || final.hostname.endsWith('.youtube.com'))) throw fail('redirecionamento fora do YouTube bloqueado');
+    const isYouTube = final.protocol === 'https:' && (final.hostname === 'youtube.com' || final.hostname.endsWith('.youtube.com'));
+    const isGoogleConsent = final.protocol === 'https:' && (final.hostname === 'consent.youtube.com' || final.hostname === 'consent.google.com' || final.hostname.endsWith('.google.com'));
+    if (!isYouTube && !isGoogleConsent) throw fail('redirecionamento fora do YouTube bloqueado');
   }
   if (!response.ok) {
     await response.body?.cancel?.();
@@ -303,7 +313,31 @@ export async function searchYouTubeWeb(term, settings = {}, fetchImpl = fetch, s
   if (!term || typeof term.query !== 'string' || !term.query.trim()) throw fail('termo de busca vazio');
   const url = new URL('https://www.youtube.com/results');
   url.search = new URLSearchParams({ search_query: term.query.trim().slice(0, 180), ...locale(term.language, settings), sp: settings.captionedOnly === false ? 'EgIQAQ==' : 'EgQQASgB' }).toString();
-  return parseYouTubeSearchHtml(await publicPage(url, fetchImpl, signal), term, settings);
+
+  const maxAttempts = 3;
+  let lastError;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    signal?.throwIfAborted();
+    try {
+      const html = await publicPage(url, fetchImpl, signal);
+      return parseYouTubeSearchHtml(html, term, settings);
+    } catch (error) {
+      lastError = error;
+      signal?.throwIfAborted();
+      if (/exigiu consentimento|verificação de robô|layout da busca desconhecido|formato dos resultados desconhecido|ultrapassou o limite|ID de vídeo inválido/i.test(error.message)) {
+        throw error;
+      }
+      if (attempt < maxAttempts) {
+        console.warn(`[TubeLess YouTube Web] Tentativa ${attempt}/${maxAttempts} falhou para "${term.query}": ${error.message}. Aguardando retry...`);
+        const delay = attempt * 300;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        signal?.throwIfAborted();
+      } else {
+        console.error(`[TubeLess YouTube Web] Falha definitiva após ${maxAttempts} tentativas para "${term.query}": ${error.message}`);
+      }
+    }
+  }
+  throw lastError;
 }
 
 export async function enrichYouTubeWeb(videos, settings = {}, fetchImpl = fetch, signal) {
@@ -315,14 +349,29 @@ export async function enrichYouTubeWeb(videos, settings = {}, fetchImpl = fetch,
       signal?.throwIfAborted();
       const index = next++;
       const video = videos[index];
-      try {
-        const url = new URL(videoUrl(video.id));
-        const language = video.language || settings.languageList?.[0];
-        for (const [key, value] of Object.entries(locale(language, settings))) url.searchParams.set(key, value);
-        results[index] = parseYouTubeWatchHtml(await publicPage(url, fetchImpl, signal), video);
-      } catch (error) {
+      const maxAttempts = 2;
+      let lastErr;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         signal?.throwIfAborted();
-        results[index] = { ...video, url: VALID_ID.test(video?.id || '') ? videoUrl(video.id) : '', captionAvailable: undefined, playabilityStatus: 'UNKNOWN', detailError: error.message || 'YouTube público: falha ao obter os metadados' };
+        try {
+          const url = new URL(videoUrl(video.id));
+          const language = video.language || settings.languageList?.[0];
+          for (const [key, value] of Object.entries(locale(language, settings))) url.searchParams.set(key, value);
+          results[index] = parseYouTubeWatchHtml(await publicPage(url, fetchImpl, signal), video);
+          lastErr = null;
+          break;
+        } catch (error) {
+          if (error.name === 'AbortError' || signal?.aborted) throw error;
+          lastErr = error;
+          if (/ID de vídeo inválido|exigiu consentimento|bloqueio de tráfego/i.test(error.message)) break;
+          if (attempt < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, attempt * 200));
+          }
+        }
+      }
+      if (lastErr) {
+        signal?.throwIfAborted();
+        results[index] = { ...video, url: VALID_ID.test(video?.id || '') ? videoUrl(video.id) : '', captionAvailable: undefined, playabilityStatus: 'UNKNOWN', detailError: lastErr.message || 'YouTube público: falha ao obter os metadados' };
       }
     }
   };

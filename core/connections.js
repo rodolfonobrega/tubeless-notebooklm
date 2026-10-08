@@ -45,3 +45,20 @@ export function sanitizeError(message, secrets = []) {
   for (const secret of secrets) if (secret) text = text.split(secret).join('[oculto]');
   return text.replace(/\b(?:sk-(?:or-v1-|proj-)?|gsk_)[a-zA-Z0-9_-]{12,}\b/g, '[oculto]').slice(0, 400);
 }
+
+export function maskSecretKey(key) {
+  if (typeof key !== 'string') return '';
+  const trimmed = key.trim();
+  if (!trimmed) return 'Nenhuma chave configurada';
+  if (trimmed.length <= 8) {
+    return `${trimmed.slice(0, 2)}••••${trimmed.slice(-2)}`;
+  }
+  if (trimmed.length <= 16) {
+    return `${trimmed.slice(0, 4)}••••••••${trimmed.slice(-4)}`;
+  }
+  const maxPrefixLen = Math.max(4, trimmed.length - 8);
+  const targetPrefixLen = trimmed.startsWith('sk-or-v1-') ? 12 : trimmed.startsWith('sk-proj-') ? 11 : 6;
+  const prefix = trimmed.slice(0, Math.min(targetPrefixLen, maxPrefixLen));
+  const suffix = trimmed.slice(-4);
+  return `${prefix}••••••••••••••••${suffix}`;
+}

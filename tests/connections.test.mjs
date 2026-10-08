@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeSettings, DEFAULT_SETTINGS } from '../core/search.js';
-import { normalizeBaseUrl, endpointUrl, requiredApiOrigins, sanitizeError } from '../core/connections.js';
+import { normalizeBaseUrl, endpointUrl, requiredApiOrigins, sanitizeError, maskSecretKey } from '../core/connections.js';
 import { expandQueries, assessVideo } from '../core/providers.js';
 
 const ok = data => ({ ok: true, json: async () => data });
@@ -85,4 +85,24 @@ test('avaliação também pode usar um provedor compatível com OpenAI', async (
 test('erros visíveis removem credenciais mesmo se o provedor as repetir', () => {
   assert.equal(sanitizeError('Token custom-key inválido', ['custom-key']), 'Token [oculto] inválido');
   assert.equal(sanitizeError('sk-proj-123456789ABCDEFGHI inválido'), '[oculto] inválido');
+});
+
+test('maskSecretKey mascara chaves mantendo apenas início e fim sem expor o segredo', () => {
+  assert.equal(maskSecretKey(''), 'Nenhuma chave configurada');
+  assert.equal(maskSecretKey('   '), 'Nenhuma chave configurada');
+  assert.equal(maskSecretKey(null), '');
+  assert.equal(maskSecretKey('12345678'), '12••••78');
+  assert.equal(maskSecretKey('1234567890123456'), '1234••••••••3456');
+  assert.equal(
+    maskSecretKey('sk-or-v1-mock_test_key_sample_value_placeholder_string_for_testing_only_6789'),
+    'sk-or-v1-moc••••••••••••••••6789'
+  );
+  assert.equal(
+    maskSecretKey('sk-proj-mock_test_key_sample_value_placeholder_string_for_testing_only_6789'),
+    'sk-proj-moc••••••••••••••••6789'
+  );
+  assert.equal(
+    maskSecretKey('AIzaSy_mock_test_key_sample_value_placeholder_string_for_testing_7890'),
+    'AIzaSy••••••••••••••••7890'
+  );
 });

@@ -1562,6 +1562,10 @@
         "mode": "chat"
       },
       {
+        "id": "openai/gpt-6-luna-decisions",
+        "mode": "evaluation"
+      },
+      {
         "id": "openai/gpt-6-sol",
         "mode": "chat"
       },
@@ -1688,6 +1692,10 @@
       {
         "id": "perceptron/perceptron-mk1.5",
         "mode": "chat"
+      },
+      {
+        "id": "perplexity/pplx-decider-v1.1-27b",
+        "mode": "evaluation"
       },
       {
         "id": "perplexity/sonar",
