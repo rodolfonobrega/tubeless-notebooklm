@@ -14,6 +14,7 @@ test('padrões usam OpenAI e busca sem chave, com avaliação independente', () 
   assert.equal(settings.evaluationBaseUrl, 'https://openrouter.ai/api/alpha');
   assert.equal(settings.evaluationApiKey, '');
   assert.equal(settings.evaluationProtocol, 'decisions');
+  assert.equal(settings.jevModel, 'perplexity/pplx-decider-v1.1-27b');
 });
 
 test('migração mantém as duas chamadas OpenRouter e permite separar as chaves', () => {

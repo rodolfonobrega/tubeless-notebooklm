@@ -6,7 +6,7 @@ export const LLM_PRESETS = Object.freeze({
 });
 
 export const EVALUATION_PRESETS = Object.freeze({
-  openrouter: { baseUrl: 'https://openrouter.ai/api/alpha', protocol: 'decisions', model: 'typesafe/jev-1.13' },
+  openrouter: { baseUrl: 'https://openrouter.ai/api/alpha', protocol: 'decisions', model: 'perplexity/pplx-decider-v1.1-27b' },
   typesafe: { baseUrl: 'https://api.typesafe.ai', protocol: 'systemone', model: 'jev-latest' },
   openai: { baseUrl: LLM_PRESETS.openai.baseUrl, protocol: 'chat', model: LLM_PRESETS.openai.model },
   groq: { baseUrl: LLM_PRESETS.groq.baseUrl, protocol: 'chat', model: LLM_PRESETS.groq.model },

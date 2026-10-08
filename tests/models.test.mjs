@@ -25,8 +25,8 @@ test('catálogo filtra por provedor e formato e remove apenas o prefixo LiteLLM'
   assert.deepEqual(modelsForConnection(catalog, 'https://api.groq.com/openai/v1', 'chat', now), ['openai/gpt-oss-120b']);
   assert.deepEqual(modelsForConnection(catalog, 'https://api.deepseek.com/v1', 'chat', now), ['deepseek-chat']);
   assert.deepEqual(modelsForConnection(catalog, 'https://openrouter.ai/api/v1', 'chat', now), ['google/gemini-2.5-flash']);
-  assert.deepEqual(modelsForConnection(catalog, 'https://openrouter.ai/api/alpha', 'decisions', now), ['typesafe/jev-1.13']);
-  assert.deepEqual(modelsForConnection(catalog, 'https://api.typesafe.ai', 'systemone', now), ['jev-latest']);
+  assert.deepEqual(modelsForConnection(catalog, 'https://openrouter.ai/api/alpha', 'decisions', now), ['openai/gpt-6-luna-decisions', 'perplexity/pplx-decider-v1.1-27b', 'typesafe/jev-1.13']);
+  assert.deepEqual(modelsForConnection(catalog, 'https://api.typesafe.ai', 'systemone', now), ['jev-1.13.0', 'jev-latest']);
 });
 
 test('sugestões excluem modelos incompatíveis e expirados sem restringir nomes customizados', () => {
@@ -48,7 +48,7 @@ test('atualização não envia credenciais e salva somente o catálogo compacto'
   const catalog = await service.refresh();
   assert.equal(catalog.fetchedAt, now);
   assert.equal(writes.length, 1);
-  assert.equal(writes[0].modelCatalog.version, 1);
+  assert.equal(writes[0].modelCatalog.version, 2);
   assert.equal(JSON.stringify(writes).includes('supported_endpoints'), false);
 });
 

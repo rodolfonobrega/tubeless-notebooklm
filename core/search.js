@@ -10,7 +10,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   youtubeMode: 'web',
   youtubeKey: '',
   expansionModel: LLM_PRESETS.openai.model,
-  jevModel: 'typesafe/jev-1.13',
+  jevModel: 'perplexity/pplx-decider-v1.1-27b',
   languages: 'pt,en',
   termsPerLanguage: 5,
   resultsPerTerm: 15,
@@ -28,10 +28,14 @@ const clamp = (value, fallback, min, max) => {
 
 export function normalizeSettings(raw = {}) {
   const value = { ...DEFAULT_SETTINGS, ...raw };
-  const legacy = raw.settingsVersion !== 2 && Object.hasOwn(raw, 'openRouterKey');
+  const legacy = (raw.settingsVersion || 1) < 2 && Object.hasOwn(raw, 'openRouterKey');
   const expansionModel = String(value.expansionModel || '').trim();
+  const rawJev = String(raw.jevModel ?? '').trim();
+  const jevModel = !rawJev || (raw.settingsVersion === 2 && rawJev === 'typesafe/jev-1.13')
+    ? DEFAULT_SETTINGS.jevModel
+    : (rawJev || DEFAULT_SETTINGS.jevModel);
   return {
-    settingsVersion: 2,
+    settingsVersion: 3,
     llmBaseUrl: normalizeBaseUrl(raw.llmBaseUrl || (legacy ? LLM_PRESETS.openrouter.baseUrl : value.llmBaseUrl)),
     llmApiKey: String(raw.llmApiKey ?? (legacy ? raw.openRouterKey : value.llmApiKey) ?? '').trim(),
     evaluationBaseUrl: normalizeBaseUrl(value.evaluationBaseUrl),
@@ -40,7 +44,7 @@ export function normalizeSettings(raw = {}) {
     youtubeMode: ['web', 'api'].includes(raw.youtubeMode) ? raw.youtubeMode : legacy && raw.youtubeKey ? 'api' : 'web',
     youtubeKey: String(value.youtubeKey || '').trim(),
     expansionModel: !expansionModel || /(^|\/)jev(?:-|$)/i.test(expansionModel) ? DEFAULT_SETTINGS.expansionModel : expansionModel,
-    jevModel: String(value.jevModel || '').trim() || DEFAULT_SETTINGS.jevModel,
+    jevModel,
     languages: String(value.languages || 'pt,en').trim(),
     termsPerLanguage: Math.round(clamp(value.termsPerLanguage, 5, 1, 20)),
     resultsPerTerm: Math.round(clamp(value.resultsPerTerm, 15, 1, 50)),

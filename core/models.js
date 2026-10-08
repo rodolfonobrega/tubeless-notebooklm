@@ -7,6 +7,17 @@ const validId = id => typeof id === 'string' && /^[a-zA-Z0-9][a-zA-Z0-9._:/+-]{0
 const validDate = date => typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(Date.parse(date));
 const active = (row, now) => !row.deprecatedOn || row.deprecatedOn > new Date(now).toISOString().slice(0, 10);
 
+export const CURATED_DECISIONS_MODELS = Object.freeze([
+  'perplexity/pplx-decider-v1.1-27b',
+  'openai/gpt-6-luna-decisions',
+  'typesafe/jev-1.13'
+]);
+
+export const CURATED_EVALUATION_MODELS = Object.freeze({
+  openrouter: CURATED_DECISIONS_MODELS,
+  typesafe: ['jev-latest', 'jev-1.13.0']
+});
+
 export function parseModelCatalog(raw, now = Date.now()) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Catálogo de modelos inválido.');
   const maps = Object.fromEntries(PROVIDERS.map(provider => [provider, new Map()]));
@@ -24,13 +35,22 @@ export function parseModelCatalog(raw, now = Date.now()) {
     const previous = maps[provider].get(id);
     if (!previous || (previous.deprecatedOn && (!row.deprecatedOn || row.deprecatedOn > previous.deprecatedOn))) maps[provider].set(id, row);
   }
+  const foundAny = Object.values(maps).some(map => map.size > 0);
+  if (!foundAny) throw new Error('Catálogo sem modelos compatíveis.');
+  for (const [provider, models] of Object.entries(CURATED_EVALUATION_MODELS)) {
+    if (!maps[provider]) continue;
+    for (const id of models) {
+      if (!maps[provider].has(id)) {
+        maps[provider].set(id, { id, mode: 'evaluation' });
+      }
+    }
+  }
   const providers = Object.fromEntries(PROVIDERS.map(provider => [provider, [...maps[provider].values()].sort((a, b) => a.id.localeCompare(b.id, 'en'))]));
-  if (!Object.values(providers).some(rows => rows.length)) throw new Error('Catálogo sem modelos compatíveis.');
-  return { version: 1, fetchedAt: now, providers };
+  return { version: 2, fetchedAt: now, providers };
 }
 
 function validSnapshot(value) {
-  return value?.version === 1 && Number.isFinite(value.fetchedAt) && value.fetchedAt >= 0 &&
+  return value?.version === 2 && Number.isFinite(value.fetchedAt) && value.fetchedAt >= 0 &&
     PROVIDERS.every(provider => Array.isArray(value.providers?.[provider]) && value.providers[provider].length <= 2500 &&
       value.providers[provider].every(row => validId(row?.id) && ['chat', 'evaluation'].includes(row.mode) && (!row.deprecatedOn || validDate(row.deprecatedOn)))) &&
     PROVIDERS.some(provider => value.providers[provider].length > 0);
@@ -40,7 +60,11 @@ export function modelsForConnection(catalog, baseUrl, protocol = 'chat', now = D
   let provider;
   try { provider = HOSTS[new URL(baseUrl).hostname]; } catch { return []; }
   const mode = protocol === 'chat' ? 'chat' : 'evaluation';
-  return (catalog?.providers?.[provider] || []).filter(row => row.mode === mode && active(row, now)).map(row => row.id);
+  const list = (catalog?.providers?.[provider] || []).filter(row => row.mode === mode && active(row, now)).map(row => row.id);
+  if (!list.length && CURATED_EVALUATION_MODELS[provider] && mode === 'evaluation') {
+    return [...CURATED_EVALUATION_MODELS[provider]];
+  }
+  return list;
 }
 
 async function readJson(response) {
