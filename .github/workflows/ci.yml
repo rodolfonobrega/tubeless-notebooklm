@@ -49,6 +49,10 @@ jobs:
           if [ ! -f "$ZIP_FILE" ]; then
             ZIP_FILE=$(ls dist/*.zip | head -n 1)
           fi
-          gh release create "$GITHUB_REF_NAME" "$ZIP_FILE" \
-            --title "TubeLess $GITHUB_REF_NAME" \
-            --generate-notes
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$ZIP_FILE" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$ZIP_FILE" \
+              --title "TubeLess $GITHUB_REF_NAME" \
+              --generate-notes
+          fi
