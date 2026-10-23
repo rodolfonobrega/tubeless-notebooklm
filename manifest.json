@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TubeLess for NotebookLM",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "Search for videos and add the selected ones to your notebook.",
   "minimum_chrome_version": "116",
   "icons": { "16": "assets/icon-16.png", "32": "assets/icon-32.png", "48": "assets/icon-48.png", "128": "assets/icon-128.png" },

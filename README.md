@@ -20,6 +20,10 @@ NotebookLM is excellent at answering questions about sources. TubeLess finds the
 
 ---
 
+## What's new in 1.8.2
+
+- **Clear search button** next to Search. It returns the search screen to its first-open state. Saved searches and settings are kept.
+
 ## What's new in 1.8.1
 
 - **Check for updates button** in Settings. It asks GitHub right away instead of waiting for the daily check.
@@ -53,7 +57,7 @@ NotebookLM is excellent at answering questions about sources. TubeLess finds the
 
 ## Install in 60 seconds
 
-1. Download `TubeLess-1.8.1.zip` from the [latest release](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/latest) and extract it to a permanent folder.
+1. Download `TubeLess-1.8.2.zip` from the [latest release](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/latest) and extract it to a permanent folder.
 2. Open `chrome://extensions` in Google Chrome.
 3. Turn on **Developer mode** and click **Load unpacked**.
 4. Select the extracted folder that contains `manifest.json`.

@@ -564,6 +564,18 @@ function installEvents() {
     renderResults();
     showMessage('Search cleared from the screen. Your saved searches are still available in History.');
   });
+  // Back to the first-open state: empty topic, no results, no messages. Saved searches and settings are kept.
+  $('clearSearch').addEventListener('click', async () => {
+    if (selectionLocked()) { showMessage('Finish the search or discard the pending queue before clearing it.'); return; }
+    $('topic').value = '';
+    state.result = null;
+    state.selected.clear();
+    state.filter = 'approved';
+    await selectionWrite.catch(() => {});
+    await chrome.storage.local.remove(['lastSearch', 'selectedVideoIds']);
+    renderResults();
+    showMessage('');
+  });
   $('pendingResume').addEventListener('click', () => { if (!state.result || state.importing || !state.importQueue) return; state.selected = new Set(state.importQueue.ids); state.filter = 'approved'; renderResults(); persistSelection().catch(error => showMessage(error.message)); importSelected(); });
   const reviewPendingSource = async confirmed => {
     if (state.importing || state.reviewing) return;
