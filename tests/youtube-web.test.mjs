@@ -3,17 +3,17 @@ import assert from 'node:assert/strict';
 import { searchYouTubeWeb, enrichYouTubeWeb, parseYouTubeSearchHtml, parseYouTubeWatchHtml } from '../core/youtube-web.js';
 
 const settings = { resultsPerTerm: 8, captionedOnly: true };
-const term = { query: 'energia solar', language: 'pt-BR' };
+const term = { query: 'solar energy', language: 'pt-BR' };
 const id = 'xKxrkht7CpY';
 const otherId = 'abc12345678';
-const video = { id, title: 'Título curto', description: 'Trecho', channel: 'Canal', foundBy: ['energia solar'] };
+const video = { id, title: 'Short title', description: 'Snippet', channel: 'Channel', foundBy: ['solar energy'] };
 const html = (name, value) => `<html><script>window["${name}"] = ${JSON.stringify(value)};</script></html>`;
 const response = (text, status = 200) => new Response(text, { status, headers: { 'Content-Type': 'text/html' } });
 const legacy = (videoId = id, overrides = {}) => ({ videoRenderer: {
   videoId,
-  title: { runs: [{ text: 'Solar "{energia}"' }] },
+  title: { runs: [{ text: 'Solar "{energy}"' }] },
   ownerText: { runs: [{ text: 'TED-Ed' }] },
-  detailedMetadataSnippets: [{ snippetText: { runs: [{ text: 'Como ' }, { text: 'funciona' }] } }],
+  detailedMetadataSnippets: [{ snippetText: { runs: [{ text: 'How ' }, { text: 'it works' }] } }],
   publishedTimeText: { simpleText: '10y ago' },
   lengthText: { simpleText: '4:59' },
   thumbnail: { thumbnails: [{ url: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`, width: 320 }] },
@@ -26,7 +26,7 @@ const searchPage = contents => html('ytInitialData', { contents: { twoColumnSear
 } } });
 const player = (videoId = id, overrides = {}) => ({
   playabilityStatus: { status: 'OK' },
-  videoDetails: { videoId, title: 'Título completo', shortDescription: 'Descrição completa\nCom {chaves} e "aspas".', author: 'TED-Ed', lengthSeconds: '299', thumbnail: { thumbnails: [{ url: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`, width: 480 }] } },
+  videoDetails: { videoId, title: 'Full title', shortDescription: 'Full description\nWith {braces} and "quotes".', author: 'TED-Ed', lengthSeconds: '299', thumbnail: { thumbnails: [{ url: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`, width: 480 }] } },
   captions: { playerCaptionsTracklistRenderer: { captionTracks: [{ baseUrl: 'https://www.youtube.com/api/timedtext?v=' + videoId, languageCode: 'pt', kind: 'asr' }] } },
   microformat: { playerMicroformatRenderer: { publishDate: '2016-01-05', uploadDate: '2016-01-04', isUnlisted: false } },
   ...overrides
@@ -40,13 +40,13 @@ test('public search extracts real results, ignores ads, and accepts credentials 
   });
   assert.equal(requested.url.origin, 'https://www.youtube.com');
   assert.equal(requested.url.pathname, '/results');
-  assert.equal(requested.url.searchParams.get('search_query'), 'energia solar');
+  assert.equal(requested.url.searchParams.get('search_query'), 'solar energy');
   assert.equal(requested.url.searchParams.get('hl'), 'pt-BR');
   assert.equal(requested.url.searchParams.get('gl'), 'BR');
   assert.equal(requested.url.searchParams.get('sp'), 'EgQQASgB');
   assert.equal(requested.options.credentials, 'include');
   assert.equal(requested.options.redirect, 'follow');
-  assert.deepEqual(results, [{ id, title: 'Solar "{energia}"', description: 'Como funciona', channel: 'TED-Ed', publishedAt: '', thumbnail: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`, foundBy: 'energia solar', duration: 'PT4M59S', captionAvailable: true }]);
+  assert.deepEqual(results, [{ id, title: 'Solar "{energy}"', description: 'How it works', channel: 'TED-Ed', publishedAt: '', thumbnail: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`, foundBy: 'solar energy', duration: 'PT4M59S', captionAvailable: true }]);
 });
 
 test('search accepts modern lockups and Shorts without confusing playlists or external URLs', () => {
@@ -54,22 +54,22 @@ test('search accepts modern lockups and Shorts without confusing playlists or ex
     { lockupViewModel: {
       contentId: otherId, contentType: 'LOCKUP_CONTENT_TYPE_VIDEO',
       metadata: { lockupMetadataViewModel: {
-        title: { content: 'Vídeo moderno' },
+        title: { content: 'Modern video' },
         metadata: { contentMetadataViewModel: { metadataRows: [{ metadataParts: [{ text: {
-          content: 'Canal novo',
+          content: 'New channel',
           commandRuns: [{ onTap: { innertubeCommand: { browseEndpoint: { browseId: 'UC123' } } } }]
         } }] }] } }
       } },
       contentImage: { thumbnailViewModel: { image: { sources: [{ url: 'https://example.com/untrusted.jpg', width: 720 }] }, overlays: [{ thumbnailOverlayBadgeViewModel: { thumbnailBadges: [{ thumbnailBadgeViewModel: { text: '12:03' } }] } }] } }
     } },
     { lockupViewModel: { contentId: id, contentType: 'LOCKUP_CONTENT_TYPE_PLAYLIST' } },
-    { shortsLockupViewModel: { onTap: { innertubeCommand: { reelWatchEndpoint: { videoId: id } } }, overlayMetadata: { primaryText: { content: 'Short de ciência' } }, thumbnail: { sources: [{ url: `https://i.ytimg.com/vi/${id}/hqdefault.jpg` }] } } },
+    { shortsLockupViewModel: { onTap: { innertubeCommand: { reelWatchEndpoint: { videoId: id } } }, overlayMetadata: { primaryText: { content: 'Science Short' } }, thumbnail: { sources: [{ url: `https://i.ytimg.com/vi/${id}/hqdefault.jpg` }] } } },
     legacy('invalid-id')
   ]);
   const results = parseYouTubeSearchHtml(page, term, { ...settings, captionedOnly: false });
   assert.deepEqual(results.map(v => ({ id: v.id, title: v.title, channel: v.channel, duration: v.duration, captionAvailable: v.captionAvailable })), [
-    { id: otherId, title: 'Vídeo moderno', channel: 'Canal novo', duration: 'PT12M3S', captionAvailable: undefined },
-    { id, title: 'Short de ciência', channel: '', duration: undefined, captionAvailable: undefined }
+    { id: otherId, title: 'Modern video', channel: 'New channel', duration: 'PT12M3S', captionAvailable: undefined },
+    { id, title: 'Science Short', channel: '', duration: undefined, captionAvailable: undefined }
   ]);
   assert.equal(results[0].thumbnail, `https://i.ytimg.com/vi/${otherId}/mqdefault.jpg`);
 });
@@ -80,14 +80,14 @@ test('player provides full description, automatic captions, and exact date witho
   const result = parseYouTubeWatchHtml(page, video);
   assert.equal(globalThis.__youtubeExecuted, false);
   delete globalThis.__youtubeExecuted;
-  assert.equal(result.title, 'Título completo');
-  assert.equal(result.description, 'Descrição completa\nCom {chaves} e "aspas".');
+  assert.equal(result.title, 'Full title');
+  assert.equal(result.description, 'Full description\nWith {braces} and "quotes".');
   assert.equal(result.publishedAt, '2016-01-05T00:00:00.000Z');
   assert.equal(result.duration, 'PT4M59S');
   assert.equal(result.captionAvailable, true);
   assert.equal(result.playabilityStatus, 'OK');
   assert.equal(result.url, `https://www.youtube.com/watch?v=${id}`);
-  assert.deepEqual(result.foundBy, ['energia solar']);
+  assert.deepEqual(result.foundBy, ['solar energy']);
 });
 
 test('enrichment removes videos without captions or unavailable ones, and keeps descriptions without captions when allowed', async () => {
@@ -104,7 +104,7 @@ test('partial YouTube failure keeps successes and exposes the block to the calle
   const results = await enrichYouTubeWeb([video, { ...video, id: otherId }], settings, async url => {
     return response(new URL(url).searchParams.get('v') === id ? html('ytInitialPlayerResponse', player()) : '<html><title>Before you continue to YouTube</title><form action="https://consent.youtube.com/save"></form></html>');
   });
-  assert.equal(results[0].description, 'Descrição completa\nCom {chaves} e "aspas".');
+  assert.equal(results[0].description, 'Full description\nWith {braces} and "quotes".');
   assert.match(results[1].detailError, /consent/i);
   assert.equal(results[1].captionAvailable, undefined);
   assert.equal(results[1].playabilityStatus, 'UNKNOWN');
@@ -120,7 +120,7 @@ test('consent page, bot check, HTTP 429, and unknown layout fail explicitly', as
 
 test('search returns empty only when YouTube gives an empty section or a no-results message', () => {
   assert.deepEqual(parseYouTubeSearchHtml(searchPage([]), term, settings), []);
-  assert.deepEqual(parseYouTubeSearchHtml(searchPage([{ messageRenderer: { text: { simpleText: 'Nenhum resultado encontrado' } } }]), term, settings), []);
+  assert.deepEqual(parseYouTubeSearchHtml(searchPage([{ messageRenderer: { text: { simpleText: 'No results found' } } }]), term, settings), []);
   assert.throws(() => parseYouTubeSearchHtml(searchPage([{ newUnknownRenderer: { value: 'changed schema' } }]), term, settings), /format|layout|could not parse/i);
 });
 
@@ -138,7 +138,7 @@ test('safe JSON parse accepts usual assignments and rejects expressions, truncat
 test('player with another ID or without metadata does not confirm videos by accident', () => {
   assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', player(otherId)), video), /ID|identity/i);
   assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', { playabilityStatus: { status: 'OK' } }), video), /metadata|data/i);
-  assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', player(id, { videoDetails: { videoId: id, title: 'Título apenas' } })), video), /description|metadata/i);
+  assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', player(id, { videoDetails: { videoId: id, title: 'Title only' } })), video), /description|metadata/i);
 });
 
 test('request refuses huge bodies before reading and also during streaming', async () => {

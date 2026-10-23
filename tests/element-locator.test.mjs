@@ -5,7 +5,7 @@ import { sanitizeCandidates, validNotebookSender, sanitizeLocatorDescriptor } fr
 
 const candidates = [
   { id: 'e0', tag: 'button', role: 'button', label: 'Cancelar', kind: 'button' },
-  { id: 'e1', tag: 'button', role: 'button', label: 'Concluir importação', kind: 'button' }
+  { id: 'e1', tag: 'button', role: 'button', label: 'Finish import', kind: 'button' }
 ];
 const settings = { evaluationBaseUrl: 'https://openrouter.ai/api/alpha', evaluationApiKey: 'fake-evaluator', evaluationProtocol: 'decisions', jevModel: 'typesafe/jev-1.13' };
 
@@ -40,7 +40,7 @@ test('locator rejects an invented target or low confidence without running actio
 test('locator also uses an OpenAI-compatible format with a validated structured response', async () => {
   assert.equal(typeof providers.selectNotebookElement, 'function');
   let url;
-  const result = await providers.selectNotebookElement('url', [{ id: 'e0', tag: 'input', kind: 'field', label: 'Cole o endereço' }], { ...settings, evaluationBaseUrl: 'https://api.groq.com/openai/v1', evaluationProtocol: 'chat', jevModel: 'openai/gpt-oss-120b' }, async (input, options) => {
+  const result = await providers.selectNotebookElement('url', [{ id: 'e0', tag: 'input', kind: 'field', label: 'Paste the address' }], { ...settings, evaluationBaseUrl: 'https://api.groq.com/openai/v1', evaluationProtocol: 'chat', jevModel: 'openai/gpt-oss-120b' }, async (input, options) => {
     url = input;
     assert.equal(JSON.parse(options.body).model, 'openai/gpt-oss-120b');
     return new Response(JSON.stringify({ choices: [{ message: { content: '{"choice":"e0","confidence":0.98}' } }] }));

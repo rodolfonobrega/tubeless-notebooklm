@@ -4,9 +4,9 @@ import { normalizeTerms, uniqueVideos, normalizeSettings, parseNotebookUrl, isNo
 import { buildDecisionRequest, readDecision } from '../core/providers.js';
 
 test('limits and deduplicates queries per language, keeping the topic as the fallback', () => {
-  const terms = normalizeTerms({ pt: ['  energia solar ', 'energia solar', 'painéis solares', 'outro'], en: ['solar energy', 'solar energy', 'PV panels'] }, ['pt', 'en'], 2, 'energia solar');
-  assert.deepEqual(terms, [{ language: 'pt', query: 'energia solar' }, { language: 'pt', query: 'painéis solares' }, { language: 'en', query: 'solar energy' }, { language: 'en', query: 'PV panels' }]);
-  assert.deepEqual(normalizeTerms({}, ['pt', 'en'], 2, 'tema'), [{ language: 'pt', query: 'tema' }]);
+  const terms = normalizeTerms({ pt: ['  solar energy ', 'solar energy', 'solar panels', 'other'], en: ['solar power', 'solar power', 'PV panels'] }, ['pt', 'en'], 2, 'solar energy');
+  assert.deepEqual(terms, [{ language: 'pt', query: 'solar energy' }, { language: 'pt', query: 'solar panels' }, { language: 'en', query: 'solar power' }, { language: 'en', query: 'PV panels' }]);
+  assert.deepEqual(normalizeTerms({}, ['pt', 'en'], 2, 'topic'), [{ language: 'pt', query: 'topic' }]);
 });
 
 test('deduplicates videos from different queries and keeps every origin', () => {
@@ -45,7 +45,7 @@ test('evaluation accepts up to 1000 videos and keeps parallelism between 1 and 3
   assert.equal(normalizeSettings({}).evaluationConcurrency, 8);
   assert.equal(normalizeSettings({ evaluationConcurrency: 100 }).evaluationConcurrency, 32);
   assert.equal(normalizeSettings({ evaluationConcurrency: 0 }).evaluationConcurrency, 1);
-  assert.equal(normalizeSettings({ evaluationConcurrency: 'inválido' }).evaluationConcurrency, 8);
+  assert.equal(normalizeSettings({ evaluationConcurrency: 'invalid' }).evaluationConcurrency, 8);
 });
 
 test('accepts only personal notebook URLs from the expected Google domains', () => {
@@ -61,9 +61,9 @@ test('accepts only personal notebook URLs from the expected Google domains', () 
 });
 
 test('Jev receives text evidence and answers with a typed probability', () => {
-  const request = buildDecisionRequest('energia solar', { title: 'Painéis solares', description: 'Instalação residencial', publishedAt: '2026-08-01', channel: 'Canal A', transcript: 'Como instalar...' }, 'typesafe/jev-1.13');
+  const request = buildDecisionRequest('solar energy', { title: 'Solar panels', description: 'Residential installation', publishedAt: '2026-08-01', channel: 'Channel A', transcript: 'How to install...' }, 'typesafe/jev-1.13');
   assert.equal(request.model, 'typesafe/jev-1.13');
-  assert.equal(request.state.video.transcript, 'Como instalar...');
+  assert.equal(request.state.video.transcript, 'How to install...');
   assert.equal(request.questions.relevant.type, 'noul');
   assert.deepEqual(readDecision({ answers: { relevant: { type: 'noul', noul: 0.82 } } }, 0.7), { probability: 0.82, accepted: true });
   assert.deepEqual(readDecision({ answers: { relevant: { type: 'noul', noul: 0.2 } } }, 0.7), { probability: 0.2, accepted: false });

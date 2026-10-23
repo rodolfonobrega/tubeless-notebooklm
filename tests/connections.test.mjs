@@ -84,8 +84,8 @@ test('evaluation can also use an OpenAI-compatible provider', async () => {
 });
 
 test('visible errors remove credentials even if the provider repeats them', () => {
-  assert.equal(sanitizeError('Token custom-key inválido', ['custom-key']), 'Token [hidden] inválido');
-  assert.equal(sanitizeError('sk-proj-123456789ABCDEFGHI inválido'), '[hidden] inválido');
+  assert.equal(sanitizeError('Token custom-key invalid', ['custom-key']), 'Token [hidden] invalid');
+  assert.equal(sanitizeError('sk-proj-123456789ABCDEFGHI invalid'), '[hidden] invalid');
 });
 
 test('maskSecretKey masks keys, keeping only the start and end without exposing the secret', () => {

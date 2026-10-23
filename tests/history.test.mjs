@@ -20,12 +20,12 @@ test('creates a history entry preserving videos, selections, and terms', () => {
 
 test('adds a new search at the top and replaces the same search', () => {
   const e1 = createHistoryEntry({ topic: 'curso sketchup' }, ['id1']);
-  const e2 = createHistoryEntry({ topic: 'física quântica' }, ['id2']);
+  const e2 = createHistoryEntry({ topic: 'quantum physics' }, ['id2']);
   let history = addHistoryEntry([], e1);
   assert.equal(history.length, 1);
   history = addHistoryEntry(history, e2);
   assert.equal(history.length, 2);
-  assert.equal(history[0].topic, 'física quântica');
+  assert.equal(history[0].topic, 'quantum physics');
 
   // Adding the same updated search must move it to the top
   const e1Updated = createHistoryEntry({ topic: 'curso sketchup', discoveredCount: 20 }, ['id1', 'id3']);
@@ -38,21 +38,21 @@ test('adds a new search at the top and replaces the same search', () => {
 test('respects the maximum history limit', () => {
   let history = [];
   for (let i = 0; i < 30; i++) {
-    const entry = createHistoryEntry({ topic: `tema ${i}` });
+    const entry = createHistoryEntry({ topic: `topic ${i}` });
     history = addHistoryEntry(history, entry, 5);
   }
   assert.equal(history.length, 5);
-  assert.equal(history[0].topic, 'tema 29');
+  assert.equal(history[0].topic, 'topic 29');
 });
 
 test('removes a search from history and finds it by ID', () => {
-  const e1 = createHistoryEntry({ topic: 'tema A' });
-  const e2 = createHistoryEntry({ topic: 'tema B' });
+  const e1 = createHistoryEntry({ topic: 'topic A' });
+  const e2 = createHistoryEntry({ topic: 'topic B' });
   let history = addHistoryEntry([e1], e2);
-  assert.equal(findHistoryEntry(history, e1.id).topic, 'tema A');
+  assert.equal(findHistoryEntry(history, e1.id).topic, 'topic A');
   assert.equal(findHistoryEntry(history, 'inexistente'), null);
 
   history = removeHistoryEntry(history, e1.id);
   assert.equal(history.length, 1);
-  assert.equal(history[0].topic, 'tema B');
+  assert.equal(history[0].topic, 'topic B');
 });

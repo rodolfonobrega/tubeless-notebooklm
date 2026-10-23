@@ -10,7 +10,7 @@ test('evaluates 250 videos and keeps partial errors and relevance order', async 
   const assessed = new Set();
   const progress = [];
   const result = await runDiscovery({
-    topic: 'tema', settings: { ...normalizeSettings({ maxEvaluations: 250, captionedOnly: false }), languageList: ['pt'] },
+    topic: 'topic', settings: { ...normalizeSettings({ maxEvaluations: 250, captionedOnly: false }), languageList: ['pt'] },
     expand: async () => [{ language: 'pt', query: 'termo' }],
     search: async () => Array.from({ length: 260 }, (_, index) => ({ ...video(`VID${String(index).padStart(8, '0')}`, 'termo'), index })),
     enrich: async items => items,
@@ -35,7 +35,7 @@ for (const concurrency of [1, 8, 16, undefined]) {
     let active = 0;
     let peak = 0;
     const result = await runDiscovery({
-      topic: 'tema', settings: { ...settings, maxEvaluations: 32, evaluationConcurrency: concurrency },
+      topic: 'topic', settings: { ...settings, maxEvaluations: 32, evaluationConcurrency: concurrency },
       expand: async () => [{ language: 'pt', query: 'termo' }],
       search: async () => Array.from({ length: 32 }, (_, index) => ({ ...video(`VID${String(index).padStart(8, '0')}`, 'termo'), index })),
       enrich: async items => items,
@@ -58,7 +58,7 @@ test('cancellation stops parallel calls without starting pending videos', async 
   let active = 0;
   const progress = [];
   await assert.rejects(runDiscovery({
-    topic: 'tema', settings: { ...settings, maxEvaluations: 250, evaluationConcurrency: 8 }, signal: controller.signal,
+    topic: 'topic', settings: { ...settings, maxEvaluations: 250, evaluationConcurrency: 8 }, signal: controller.signal,
     expand: async () => [{ language: 'pt', query: 'termo' }],
     search: async () => Array.from({ length: 250 }, (_, index) => video(`VID${String(index).padStart(8, '0')}`, 'termo')),
     enrich: async items => items,
@@ -81,11 +81,11 @@ test('cancellation stops parallel calls without starting pending videos', async 
 
 test('searches terms in parallel, tolerates partial failure, and uses Jev as the only approval', async () => {
   const result = await runDiscovery({
-    topic: 'tema', settings,
+    topic: 'topic', settings,
     expand: async () => [{ language: 'pt', query: 'termo pt' }, { language: 'en', query: 'term en' }],
     search: async term => term.language === 'pt' ? [video('abc12345678', term.query), video('def12345678', term.query)] : [video('abc12345678', term.query), video('ghi12345678', term.query)],
-    enrich: async items => items.map(item => ({ ...item, description: 'descrição', url: `https://www.youtube.com/watch?v=${item.id}` })),
-    assess: async (_topic, item) => item.id === 'ghi12345678' ? { probability: 0.9, accepted: true } : item.id === 'def12345678' ? Promise.reject(new Error('créditos')) : { probability: 0.3, accepted: false }
+    enrich: async items => items.map(item => ({ ...item, description: 'description', url: `https://www.youtube.com/watch?v=${item.id}` })),
+    assess: async (_topic, item) => item.id === 'ghi12345678' ? { probability: 0.9, accepted: true } : item.id === 'def12345678' ? Promise.reject(new Error('no credits')) : { probability: 0.3, accepted: false }
   });
   assert.equal(result.videos.length, 3);
   assert.deepEqual(result.videos.map(v => [v.id, v.status]), [['ghi12345678', 'approved'], ['abc12345678', 'rejected'], ['def12345678', 'error']]);
@@ -95,29 +95,29 @@ test('searches terms in parallel, tolerates partial failure, and uses Jev as the
 
 test('expansion failure keeps the search on the original topic and warns', async () => {
   const result = await runDiscovery({
-    topic: 'energia', settings,
-    expand: async () => { throw new Error('sem créditos'); },
-    search: async term => { assert.equal(term.query, 'energia'); return [video('abc12345678', 'energia')]; },
+    topic: 'energy', settings,
+    expand: async () => { throw new Error('no credits'); },
+    search: async term => { assert.equal(term.query, 'energy'); return [video('abc12345678', 'energy')]; },
     enrich: async items => items,
     assess: async () => ({ probability: 0.8, accepted: true })
   });
-  assert.equal(result.terms[0].query, 'energia');
+  assert.equal(result.terms[0].query, 'energy');
   assert.match(result.warnings[0], /vary the terms/i);
 });
 
 test('unexpected expansion output also keeps the original topic', async () => {
-  const result = await runDiscovery({ topic: 'energia', settings, expand: async () => undefined, search: async () => [video('abc12345678', 'energia')], enrich: async items => items, assess: async () => ({ probability: 0.8, accepted: true }) });
-  assert.deepEqual(result.terms, [{ language: 'pt', query: 'energia' }]);
+  const result = await runDiscovery({ topic: 'energy', settings, expand: async () => undefined, search: async () => [video('abc12345678', 'energy')], enrich: async items => items, assess: async () => ({ probability: 0.8, accepted: true }) });
+  assert.deepEqual(result.terms, [{ language: 'pt', query: 'energy' }]);
   assert.match(result.warnings[0], /vary the terms/i);
 });
 
 test('an error in every search is not shown as an empty list', async () => {
-  await assert.rejects(runDiscovery({ topic: 'tema', settings, expand: async () => [{ language: 'pt', query: 'x' }], search: async () => { throw new Error('quota'); }, enrich: async () => [], assess: async () => ({ probability: 1, accepted: true }) }), /quota/);
+  await assert.rejects(runDiscovery({ topic: 'topic', settings, expand: async () => [{ language: 'pt', query: 'x' }], search: async () => { throw new Error('quota'); }, enrich: async () => [], assess: async () => ({ probability: 1, accepted: true }) }), /quota/);
 });
 
 test('public search does not evaluate videos whose details could not be verified', async () => {
   const assessed = [];
-  const result = await runDiscovery({ topic: 'energia', settings: { ...settings, youtubeMode: 'web', captionedOnly: true }, expand: async () => [{ language: 'pt', query: 'solar' }], search: async () => [video('abc12345678', 'solar'), video('def12345678', 'solar')], enrich: async items => items.map((item, index) => index ? { ...item, detailError: 'bloqueio', captionAvailable: undefined } : { ...item, captionAvailable: true, description: 'Completa' }), assess: async (_topic, item) => { assessed.push(item.id); return { probability: 0.9, accepted: true }; } });
+  const result = await runDiscovery({ topic: 'energy', settings: { ...settings, youtubeMode: 'web', captionedOnly: true }, expand: async () => [{ language: 'pt', query: 'solar' }], search: async () => [video('abc12345678', 'solar'), video('def12345678', 'solar')], enrich: async items => items.map((item, index) => index ? { ...item, detailError: 'bloqueio', captionAvailable: undefined } : { ...item, captionAvailable: true, description: 'Completa' }), assess: async (_topic, item) => { assessed.push(item.id); return { probability: 0.9, accepted: true }; } });
   assert.deepEqual(assessed, ['abc12345678']);
   assert.equal(result.videos.length, 1);
   assert.match(result.warnings[0], /could not be verified/i);
@@ -125,14 +125,14 @@ test('public search does not evaluate videos whose details could not be verified
 
 test('total failure in public details does not approve based on the title alone', async () => {
   let assessed = false;
-  await assert.rejects(runDiscovery({ topic: 'energia', settings: { ...settings, youtubeMode: 'web' }, expand: async () => [{ language: 'pt', query: 'solar' }], search: async () => [video('abc12345678', 'solar')], enrich: async () => { throw new Error('bloqueio'); }, assess: async () => { assessed = true; return { probability: 0.9, accepted: true }; } }), /details/i);
+  await assert.rejects(runDiscovery({ topic: 'energy', settings: { ...settings, youtubeMode: 'web' }, expand: async () => [{ language: 'pt', query: 'solar' }], search: async () => [video('abc12345678', 'solar')], enrich: async () => { throw new Error('bloqueio'); }, assess: async () => { assessed = true; return { probability: 0.9, accepted: true }; } }), /details/i);
   assert.equal(assessed, false);
 });
 
 test('evaluation limit interleaves the results of the languages', async () => {
   const assessed = [];
   await runDiscovery({
-    topic: 'tema', settings: { ...settings, maxEvaluations: 4 },
+    topic: 'topic', settings: { ...settings, maxEvaluations: 4 },
     expand: async () => [{ language: 'pt', query: 'termo pt' }, { language: 'en', query: 'term en' }],
     search: async term => term.language === 'pt'
       ? ['AAA00000001', 'AAA00000002', 'AAA00000003', 'AAA00000004'].map(id => video(id, term.query))
@@ -146,7 +146,7 @@ test('evaluation limit interleaves the results of the languages', async () => {
 test('official API also excludes videos without captions when the filter is on', async () => {
   const assessed = [];
   const result = await runDiscovery({
-    topic: 'energia', settings: { ...settings, youtubeMode: 'api', captionedOnly: true },
+    topic: 'energy', settings: { ...settings, youtubeMode: 'api', captionedOnly: true },
     expand: async () => [{ language: 'pt', query: 'solar' }],
     search: async () => [video('abc12345678', 'solar'), video('def12345678', 'solar')],
     enrich: async items => items.map((item, index) => ({ ...item, captionAvailable: index === 0 })),
@@ -159,7 +159,7 @@ test('official API also excludes videos without captions when the filter is on',
 test('API details failure blocks approval when captions must be verified', async () => {
   let assessed = false;
   await assert.rejects(runDiscovery({
-    topic: 'energia', settings: { ...settings, youtubeMode: 'api', captionedOnly: true },
+    topic: 'energy', settings: { ...settings, youtubeMode: 'api', captionedOnly: true },
     expand: async () => [{ language: 'pt', query: 'solar' }],
     search: async () => [video('abc12345678', 'solar')],
     enrich: async () => { throw new Error('quota'); },
@@ -169,29 +169,29 @@ test('API details failure blocks approval when captions must be verified', async
 });
 
 test('continuation drops old terms and already evaluated videos before spending on details', async () => {
-  const previousResult = { topic: 'energia', terms: [{ language: 'pt', query: '  ENERGIA solar ' }], videos: [{ ...video('abc12345678', 'energia solar'), status: 'approved', probability: 0.8 }], rounds: 1 };
+  const previousResult = { topic: 'energy', terms: [{ language: 'pt', query: '  SOLAR energy ' }], videos: [{ ...video('abc12345678', 'solar energy'), status: 'approved', probability: 0.8 }], rounds: 1 };
   const searched = [];
   const assessed = [];
   const result = await runDiscovery({
-    topic: 'energia', settings, previousResult,
+    topic: 'energy', settings, previousResult,
     expand: async (_topic, context) => {
-      assert.equal(context.previousTerms[0].query, '  ENERGIA solar ');
+      assert.equal(context.previousTerms[0].query, '  SOLAR energy ');
       assert.equal(context.round, 2);
-      return [{ language: 'pt', query: 'energia solar' }, { language: 'pt', query: 'armazenamento renovável' }, { language: 'en', query: 'solar storage' }];
+      return [{ language: 'pt', query: 'solar energy' }, { language: 'pt', query: 'renewable storage' }, { language: 'en', query: 'solar storage' }];
     },
     search: async term => { searched.push(term.query); return [video('abc12345678', term.query), video('def12345678', term.query)]; },
     enrich: async items => { assert.deepEqual(items.map(item => item.id), ['def12345678']); return items; },
     assess: async (_topic, item) => { assessed.push(item.id); return { probability: 0.9, accepted: true }; }
   });
-  assert.deepEqual(searched, ['armazenamento renovável', 'solar storage']);
+  assert.deepEqual(searched, ['renewable storage', 'solar storage']);
   assert.deepEqual(assessed, ['def12345678']);
   assert.equal(result.videos.length, 1);
 });
 
 test('continuation with no new videos returns an empty batch and does not re-evaluate', async () => {
   const result = await runDiscovery({
-    topic: 'energia', settings, previousResult: { topic: 'energia', terms: [{ language: 'pt', query: 'antigo' }], videos: [video('abc12345678', 'antigo')] },
-    expand: async () => [{ language: 'pt', query: 'novo' }], search: async () => [video('abc12345678', 'novo')],
+    topic: 'energy', settings, previousResult: { topic: 'energy', terms: [{ language: 'pt', query: 'old' }], videos: [video('abc12345678', 'old')] },
+    expand: async () => [{ language: 'pt', query: 'new' }], search: async () => [video('abc12345678', 'new')],
     enrich: async () => { assert.fail('Old details must not be called'); }, assess: async () => { assert.fail('Old evaluation must not be called'); }
   });
   assert.deepEqual(result.videos, []);
@@ -199,16 +199,16 @@ test('continuation with no new videos returns an empty batch and does not re-eva
 });
 
 test('continuation filters repeats before the term limit and does not search the original topic on failure', async () => {
-  const previousResult = { topic: 'energia', terms: [{ language: 'pt', query: 'antigo' }], videos: [] };
-  const options = { topic: 'energia', settings, previousResult, search: async () => { assert.fail('No repeated search should be triggered'); } };
-  await assert.rejects(runDiscovery({ ...options, expand: async () => [{ language: 'pt', query: 'antigo' }] }), /new terms/i);
+  const previousResult = { topic: 'energy', terms: [{ language: 'pt', query: 'old' }], videos: [] };
+  const options = { topic: 'energy', settings, previousResult, search: async () => { assert.fail('No repeated search should be triggered'); } };
+  await assert.rejects(runDiscovery({ ...options, expand: async () => [{ language: 'pt', query: 'old' }] }), /new terms/i);
   await assert.rejects(runDiscovery({ ...options, expand: async () => { throw new Error('quota'); } }), /quota/);
 });
 
 test('a retired evaluation model stops the search instead of listing every video error', async () => {
   const gone = Object.assign(new Error('the model is no longer available'), { code: 'MODEL_UNAVAILABLE' });
   await assert.rejects(runDiscovery({
-    topic: 'tema', settings,
+    topic: 'topic', settings,
     expand: async () => [{ language: 'pt', query: 'termo' }],
     search: async () => [video('abc12345678', 'termo'), video('def12345678', 'termo')],
     enrich: async items => items,

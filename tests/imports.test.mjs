@@ -7,7 +7,7 @@ const urlA = 'https://notebook.google.com/notebook/aaa';
 const urlB = 'https://notebook.google.com/notebook/bbb';
 
 test('batch records individual confirmation and keeps unanswered items for review', () => {
-  const queue = buildImportQueue('tema', videos, urlA);
+  const queue = buildImportQueue('topic', videos, urlA);
   const partial = recordBatchImportOutcome(queue, { status: 'batch', outcomes: [{ id: videos[0].id, status: 'imported' }, { id: 'foraDaFila', status: 'imported' }] });
   assert.deepEqual(partial.completed, [videos[0].id]);
   assert.equal(partial.failures[0].id, videos[1].id);
@@ -18,7 +18,7 @@ test('batch records individual confirmation and keeps unanswered items for revie
 });
 
 test('a conflicting or lost response neither confirms nor releases an automatic resend', () => {
-  const queue = buildImportQueue('tema', videos, urlA);
+  const queue = buildImportQueue('topic', videos, urlA);
   const conflicting = recordBatchImportOutcome(queue, { status: 'batch', outcomes: [{ id: videos[0].id, status: 'imported' }, { id: videos[0].id, status: 'error' }] });
   assert.deepEqual(conflicting.completed, []);
   assert.ok(conflicting.failures.every(item => item.status === 'uncertain'));
@@ -26,7 +26,7 @@ test('a conflicting or lost response neither confirms nor releases an automatic 
 });
 
 test('an error before submission keeps the layout reason on every batch item', () => {
-  const queue = buildImportQueue('tema', videos, urlA);
+  const queue = buildImportQueue('topic', videos, urlA);
   const failed = recordBatchImportOutcome(queue, { status: 'error', reason: 'layout', message: 'Controle ausente' });
   assert.deepEqual(failed.completed, []);
   assert.equal(failed.failures.length, 2);
@@ -34,10 +34,10 @@ test('an error before submission keeps the layout reason on every batch item', (
 });
 
 test('queue pins the notebook and only resumes at the same destination', () => {
-  const original = buildImportQueue('tema', videos, urlA);
+  const original = buildImportQueue('topic', videos, urlA);
   const after = recordImportOutcome(original, 'abc12345678', { status: 'imported' });
-  const resumed = buildImportQueue('tema', videos, urlA, after);
-  const other = buildImportQueue('tema', videos, urlB, after);
+  const resumed = buildImportQueue('topic', videos, urlA, after);
+  const other = buildImportQueue('topic', videos, urlB, after);
   assert.equal(resumed.notebookUrl, urlA);
   assert.deepEqual(resumed.completed, ['abc12345678']);
   assert.deepEqual(other.completed, []);
@@ -45,7 +45,7 @@ test('queue pins the notebook and only resumes at the same destination', () => {
 });
 
 test('an individual failure keeps other videos pending', () => {
-  const queue = buildImportQueue('tema', videos, urlA);
+  const queue = buildImportQueue('topic', videos, urlA);
   const failed = recordImportOutcome(queue, 'abc12345678', { status: 'error', message: 'recusado' });
   const next = recordImportOutcome(failed, 'def12345678', { status: 'imported' });
   assert.deepEqual(next.completed, ['def12345678']);
@@ -53,7 +53,7 @@ test('an individual failure keeps other videos pending', () => {
 });
 
 test('an uncertain source can be confirmed manually after checking the notebook', () => {
-  const queue = buildImportQueue('tema', videos, urlA);
+  const queue = buildImportQueue('topic', videos, urlA);
   const uncertain = recordImportOutcome(queue, 'abc12345678', { status: 'uncertain', message: 'no confirmation' });
   const confirmed = markImportConfirmed(uncertain, 'abc12345678');
   assert.deepEqual(confirmed.completed, ['abc12345678']);
@@ -69,7 +69,7 @@ test('an uncertain response pauses the queue to avoid assigning a late source to
 
 test('a layout error pauses without repeating the same failure on every queued video', () => {
   assert.equal(shouldPauseImport({ status: 'error', reason: 'layout' }), true);
-  const queue = buildImportQueue('tema', [{ id: 'abc12345678' }, { id: 'def12345678' }], 'https://notebook.google.com/notebook/demo');
+  const queue = buildImportQueue('topic', [{ id: 'abc12345678' }, { id: 'def12345678' }], 'https://notebook.google.com/notebook/demo');
   const result = recordImportOutcome(queue, 'abc12345678', { status: 'error', reason: 'layout', message: 'Controle ausente' });
   assert.equal(result.failures[0].reason, 'layout');
   assert.equal(result.failures.length, 1);
