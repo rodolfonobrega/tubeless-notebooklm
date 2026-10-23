@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { expandQueries, searchYouTube, enrichYouTube, assessVideo, checkRecencyConstraint } from '../core/providers.js';
+import { expandQueries, searchYouTube, enrichYouTube, assessVideo, checkRecencyConstraint, recencyCutoff } from '../core/providers.js';
 
 const ok = value => ({ ok: true, json: async () => value });
 const settings = { openRouterKey: 'test-key', youtubeKey: 'test-yt', expansionModel: 'google/gemini-2.5-flash', jevModel: 'typesafe/jev-1.13', languageList: ['pt', 'en'], termsPerLanguage: 2, resultsPerTerm: 8, captionedOnly: true, threshold: 0.7 };
@@ -96,4 +96,13 @@ test('a retired evaluation model fails with MODEL_UNAVAILABLE and tells the user
 test('a generic 404 is not mistaken for a retired model', async () => {
   const retired = { ...settings, evaluationProtocol: 'chat', jevModel: 'gone/model' };
   await assert.rejects(assessVideo('energy', { title: 'Solar' }, retired, async () => ({ ok: false, status: 404, json: async () => ({ error: { message: 'Not Found' } }) })), error => error.code === undefined);
+});
+
+test('recent-video requests send a publishedAfter cutoff to the API search', async () => {
+  assert.equal(recencyCutoff('solar energy basics'), null);
+  const cutoff = recencyCutoff('latest solar energy videos', new Date('2026-10-23T12:00:00Z'));
+  assert.match(cutoff, /^2025-04-2\d/);
+  let searchUrl;
+  await searchYouTube({ language: 'en', query: 'solar energy' }, { ...settings, youtubeMode: 'api', publishedAfter: cutoff }, async url => { searchUrl = new URL(url); return ok({ items: [] }); });
+  assert.equal(searchUrl.searchParams.get('publishedAfter'), cutoff);
 });

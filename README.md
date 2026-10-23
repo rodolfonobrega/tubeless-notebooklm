@@ -20,6 +20,10 @@ NotebookLM is excellent at answering questions about sources. TubeLess finds the
 
 ---
 
+## What's new in 1.7.0
+
+- **Recent-video requests filter by date.** If your topic asks for recent videos (for example "latest" or "this year"), API searches only return videos from the last 18 months.
+
 ## What's new in 1.6.0
 
 - **Retired models are reported clearly.** If a provider says a model is gone, the search stops and asks you to choose another model in Settings.
@@ -40,7 +44,7 @@ NotebookLM is excellent at answering questions about sources. TubeLess finds the
 
 ## Install in 60 seconds
 
-1. Download `TubeLess-1.6.1.zip` from the [latest release](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/latest) and extract it to a permanent folder.
+1. Download `TubeLess-1.7.0.zip` from the [latest release](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/latest) and extract it to a permanent folder.
 2. Open `chrome://extensions` in Google Chrome.
 3. Turn on **Developer mode** and click **Load unpacked**.
 4. Select the extracted folder that contains `manifest.json`.

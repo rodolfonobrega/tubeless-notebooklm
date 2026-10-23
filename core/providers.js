@@ -78,10 +78,21 @@ async function chatCompletion(baseUrl, key, model, prompt, service, fetchImpl, s
   return parseJsonContent(data?.choices?.[0]?.message?.content);
 }
 
+// Topics that ask for recent videos. Keywords stay in several languages on purpose: users type topics in any language.
+const RECENCY_TOPIC = /\b(recentes?|recent|recents|últimos?|ultimos?|latest|newest|novos?|atuais|atual|current|deste ano|desse ano|this year)\b/i;
+
+// Recent videos are those within 18 months, the same limit used when scoring videos.
+export function recencyCutoff(topic, now = new Date()) {
+  if (!topic || !RECENCY_TOPIC.test(String(topic))) return null;
+  const cutoff = new Date(now);
+  cutoff.setMonth(cutoff.getMonth() - 18);
+  return cutoff.toISOString();
+}
+
 export function checkRecencyConstraint(topic, video) {
   if (!topic || !video?.publishedAt) return { restricted: false, allowed: true };
   const topicText = String(topic).toLowerCase();
-  const hasRecency = /\b(recentes?|recent|recents|últimos?|ultimos?|latest|newest|novos?|atuais|atual|current|deste ano|desse ano|this year)\b/i.test(topicText);
+  const hasRecency = RECENCY_TOPIC.test(topicText);
   if (!hasRecency) return { restricted: false, allowed: true };
   const pubDate = new Date(video.publishedAt);
   if (isNaN(pubDate.getTime())) return { restricted: true, allowed: true };
@@ -127,7 +138,7 @@ export async function searchYouTube(term, settings, fetchImpl = fetch, signal) {
   }
   if (!settings.youtubeKey) throw new Error('Enter the YouTube key or choose the search without a key.');
   const url = new URL('https://www.googleapis.com/youtube/v3/search');
-  url.search = new URLSearchParams({ part: 'snippet', type: 'video', q: term.query, maxResults: String(settings.resultsPerTerm), relevanceLanguage: term.language, safeSearch: 'moderate', key: settings.youtubeKey, ...(settings.captionedOnly ? { videoCaption: 'closedCaption' } : {}) }).toString();
+  url.search = new URLSearchParams({ part: 'snippet', type: 'video', q: term.query, maxResults: String(settings.resultsPerTerm), relevanceLanguage: term.language, safeSearch: 'moderate', key: settings.youtubeKey, ...(settings.captionedOnly ? { videoCaption: 'closedCaption' } : {}), ...(settings.publishedAfter ? { publishedAfter: settings.publishedAfter } : {}) }).toString();
   const data = await readYouTubeApi(url, settings, fetchImpl, signal);
   return (data.items || []).filter(item => item?.id?.videoId).map(item => ({
     id: item.id.videoId,

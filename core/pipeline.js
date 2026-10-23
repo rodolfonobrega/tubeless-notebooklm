@@ -1,5 +1,5 @@
 import { uniqueVideos, sortVideosByRelevance, normalizeSettings } from './search.js';
-import { expandQueries, searchYouTube, enrichYouTube, assessVideo } from './providers.js';
+import { expandQueries, searchYouTube, enrichYouTube, assessVideo, recencyCutoff } from './providers.js';
 import { freshSearchTerms } from './continuation.js';
 
 async function mapLimit(items, limit, work, signal, progress) {
@@ -32,7 +32,9 @@ export async function runDiscovery({ topic, settings, previousResult, fetchImpl 
   const warnings = [];
   const requireCaptions = settings.captionedOnly === true || (settings.youtubeMode === 'web' && settings.captionedOnly !== false);
   const doExpand = expand || ((value, history) => expandQueries(value, settings, fetchImpl, signal, history));
-  const doSearch = search || ((term) => searchYouTube(term, settings, fetchImpl, signal));
+  // Recent-video topics get a server-side date filter where the API supports it.
+  const publishedAfter = recencyCutoff(cleanTopic);
+  const doSearch = search || ((term) => searchYouTube(term, { ...settings, publishedAfter }, fetchImpl, signal));
   const doEnrich = enrich || ((items) => enrichYouTube(items, settings, fetchImpl, signal));
   const doAssess = assess || ((value, video) => assessVideo(value, video, settings, fetchImpl, signal));
 
