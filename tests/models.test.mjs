@@ -20,7 +20,7 @@ const raw = {
 };
 const snapshot = () => parseModelCatalog(raw, now);
 
-test('catálogo filtra por provedor e formato e remove apenas o prefixo LiteLLM', () => {
+test('catalog filters by provider and format and removes only the LiteLLM prefix', () => {
   const catalog = snapshot();
   assert.deepEqual(modelsForConnection(catalog, 'https://api.groq.com/openai/v1', 'chat', now), ['openai/gpt-oss-120b']);
   assert.deepEqual(modelsForConnection(catalog, 'https://api.deepseek.com/v1', 'chat', now), ['deepseek-chat']);
@@ -29,14 +29,14 @@ test('catálogo filtra por provedor e formato e remove apenas o prefixo LiteLLM'
   assert.deepEqual(modelsForConnection(catalog, 'https://api.typesafe.ai', 'systemone', now), ['jev-1.13.0', 'jev-latest']);
 });
 
-test('sugestões excluem modelos incompatíveis e expirados sem restringir nomes customizados', () => {
+test('suggestions exclude incompatible and expired models without restricting custom names', () => {
   assert.deepEqual(modelsForConnection(snapshot(), 'https://api.openai.com/v1', 'chat', now), ['future', 'gpt-5-mini']);
   assert.deepEqual(modelsForConnection(snapshot(), 'https://api.openai.com/v1', 'chat', now + 10 * 86400000), ['gpt-5-mini']);
   assert.deepEqual(modelsForConnection(snapshot(), 'https://custom.example/v1', 'chat', now), []);
-  assert.throws(() => parseModelCatalog({ sample_spec: {} }, now), /catálogo/i);
+  assert.throws(() => parseModelCatalog({ sample_spec: {} }, now), /catalog/i);
 });
 
-test('atualização não envia credenciais e salva somente o catálogo compacto', async () => {
+test('refresh sends no credentials and saves only the compact catalog', async () => {
   const writes = [];
   const service = new ModelCatalog({ now: () => now, storage: { get: async () => ({}), set: async value => writes.push(value) }, fetchImpl: async (url, options) => {
     assert.equal(url, 'https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json');
@@ -52,7 +52,7 @@ test('atualização não envia credenciais e salva somente o catálogo compacto'
   assert.equal(JSON.stringify(writes).includes('supported_endpoints'), false);
 });
 
-test('catálogo local funciona offline e uma atualização inválida preserva a lista anterior', async () => {
+test('the local catalog works offline and an invalid refresh keeps the previous list', async () => {
   const service = new ModelCatalog({ now: () => now, storage: { get: async () => ({}), set: async () => {} }, fetchImpl: async url => {
     if (url.startsWith('file:')) return new Response(JSON.stringify(snapshot()));
     throw new Error('offline');
@@ -63,10 +63,10 @@ test('catálogo local funciona offline e uma atualização inválida preserva a 
   assert.deepEqual(modelsForConnection(service.catalog, 'https://api.groq.com/openai/v1', 'chat', now), ['openai/gpt-oss-120b']);
 });
 
-test('cache recente evita baixar novamente e cache inválido usa cópia incluída', async () => {
+test('a recent cache avoids downloading again and an invalid cache falls back to the bundled copy', async () => {
   let calls = 0;
   const cached = { ...snapshot(), fetchedAt: now - 1000 };
-  const service = new ModelCatalog({ now: () => now, storage: { get: async () => ({ modelCatalog: cached }) }, fetchImpl: async () => { calls++; throw new Error('não deve baixar'); } });
+  const service = new ModelCatalog({ now: () => now, storage: { get: async () => ({ modelCatalog: cached }) }, fetchImpl: async () => { calls++; throw new Error('should not download'); } });
   await service.load();
   assert.equal(calls, 0);
   assert.equal(service.needsRefresh, false);
@@ -76,8 +76,8 @@ test('cache recente evita baixar novamente e cache inválido usa cópia incluíd
   assert.equal(broken.catalog.providers.groq.length, 1);
 });
 
-test('download inválido, muito grande ou sem modelos suportados não substitui o cache', async () => {
-  for (const response of [new Response('{}'), new Response('não é JSON'), new Response('{}', { status: 503 }), new Response('{}', { headers: { 'content-length': '10000000' } })]) {
+test('an invalid, oversized or model-less download does not replace the cache', async () => {
+  for (const response of [new Response('{}'), new Response('not JSON'), new Response('{}', { status: 503 }), new Response('{}', { headers: { 'content-length': '10000000' } })]) {
     let written = false;
     const service = new ModelCatalog({ now: () => now, storage: { set: async () => { written = true; } }, fetchImpl: async () => response });
     service.catalog = snapshot();
@@ -87,7 +87,7 @@ test('download inválido, muito grande ou sem modelos suportados não substitui 
   }
 });
 
-test('fetch mantém chamada sem vincular this à instância do catálogo', async () => {
+test('fetch is called without binding this to the catalog instance', async () => {
   const service = new ModelCatalog({ storage: { set: async () => {} }, now: () => now, fetchImpl: function () {
     assert.equal(this, undefined);
     return Promise.resolve(new Response(JSON.stringify(raw)));

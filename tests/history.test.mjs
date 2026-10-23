@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHistoryEntry, addHistoryEntry, removeHistoryEntry, findHistoryEntry, MAX_HISTORY_ITEMS } from '../core/history.js';
 
-test('cria entrada de histórico preservando vídeos, seleções e termos', () => {
+test('creates a history entry preserving videos, selections, and terms', () => {
   const result = {
     topic: 'sketchup iniciante',
     terms: [{ language: 'pt', query: 'sketchup tutorial' }],
@@ -35,7 +35,7 @@ test('adiciona nova busca no topo e substitui mesma pesquisa', () => {
   assert.equal(history[0].discoveredCount, 20);
 });
 
-test('respeita limite máximo de histórico', () => {
+test('respects the maximum history limit', () => {
   let history = [];
   for (let i = 0; i < 30; i++) {
     const entry = createHistoryEntry({ topic: `tema ${i}` });
@@ -45,7 +45,7 @@ test('respeita limite máximo de histórico', () => {
   assert.equal(history[0].topic, 'tema 29');
 });
 
-test('remove busca do histórico e localiza por ID', () => {
+test('removes a search from history and finds it by ID', () => {
   const e1 = createHistoryEntry({ topic: 'tema A' });
   const e2 = createHistoryEntry({ topic: 'tema B' });
   let history = addHistoryEntry([e1], e2);

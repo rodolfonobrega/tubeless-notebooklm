@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const manifest = JSON.parse(readFileSync(resolve(root, 'manifest.json'), 'utf8'));
-if (!/^\d+\.\d+\.\d+(?:\.\d+)?$/.test(manifest.version)) throw new Error('Versão inválida.');
+if (!/^\d+\.\d+\.\d+(?:\.\d+)?$/.test(manifest.version)) throw new Error('Invalid version.');
 // Explicit allowlist: credentials, scripts and browser profiles never enter the package.
 const names = ['manifest.json', 'background.js', 'panel.html', 'panel.css', 'panel.js', 'settings.js', 'README.md', 'docs/verification.md', 'assets/model-catalog.json', 'assets/litellm-LICENSE.txt'];
 for (const [directory, extension] of [['core', '.js'], ['content', '.js'], ['assets', '.png']]) {
@@ -31,7 +31,7 @@ let offset = 0;
 for (const name of names) {
   const path = resolve(root, name);
   const stat = lstatSync(path);
-  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(`Arquivo inválido: ${name}`);
+  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(`Invalid file: ${name}`);
   const data = readFileSync(path);
   const filename = Buffer.from(name, 'utf8');
   const crc = crc32(data);

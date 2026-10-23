@@ -4,7 +4,7 @@ import { normalizeSettings } from '../core/search.js';
 // Select a complete connection; token prefixes are never used to infer a host.
 export function settingsFromEnv(env, { provider = 'openai', chatEvaluation = false } = {}) {
   const selected = LLM_PRESETS[provider];
-  if (!selected) throw new Error('Provedor de teste inválido. Use openai, groq, openrouter ou deepseek.');
+  if (!selected) throw new Error('Invalid test provider. Use openai, groq, openrouter, or deepseek.');
   const llmBaseUrl = env.LLM_BASE_URL || (provider === 'openai' ? env.OPENAI_BASE_URL : '') || selected.baseUrl;
   const llmApiKey = env.LLM_API_KEY || env[`${provider.toUpperCase()}_API_KEY`] || '';
   const expansionModel = env.LLM_MODEL || (provider === 'openai' ? env.DEFAULT_MODEL : '') || selected.model;
@@ -14,7 +14,7 @@ export function settingsFromEnv(env, { provider = 'openai', chatEvaluation = fal
   const explicitHost = env.EVALUATION_BASE_URL ? new URL(env.EVALUATION_BASE_URL).hostname : '';
   const evaluationProtocol = env.EVALUATION_PROTOCOL || (explicitHost === 'api.typesafe.ai' || (!explicitHost && source === 'typesafe') ? 'systemone' : 'decisions');
   if (!chatEvaluation && evaluationProtocol === 'chat' && !env.EVALUATION_BASE_URL && source !== 'openrouter') {
-    throw new Error('Informe EVALUATION_BASE_URL para uma conexão de avaliação Chat Completions explícita.');
+    throw new Error('Set EVALUATION_BASE_URL for an explicit Chat Completions evaluation connection.');
   }
   if (!chatEvaluation && evaluationProtocol === 'decisions' && source === 'typesafe' && !env.EVALUATION_BASE_URL) {
     throw new Error('A chave TypeSafe direta requer o protocolo systemone.');

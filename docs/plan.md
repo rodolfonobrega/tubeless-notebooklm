@@ -1,10 +1,10 @@
-# Plano de implementação
+# Implementation plan
 
-- [x] Contratos puros: configuração, consultas multilíngues, vídeos deduplicados, URLs seguras e interpretação da resposta Jev; teste primeiro.
-- [x] Provedores: Chat Completions configurável, Decisions/System One e YouTube público/API; testes com respostas controladas e erros parciais.
-- [x] Orquestrador: limites, progresso, cancelamento, relevância e seleção; testes.
-- [x] Integração NotebookLM: detecção da aba, importação em lote por UI, confirmação individual, retomada e mensagens de erro; validada em páginas simuladas, incluindo 250 links e interrupção durante o envio.
-- [x] Painel lateral e identidade visual, configurações, resultados e persistência da última pesquisa; inspeção visual em largura de painel.
-- [x] README com instalação, chaves, execução, privacidade e limites; `npm test` e `npm run check`.
+- [x] Pure contracts: configuration, multilingual queries, deduplicated videos, safe URLs, and Jev response parsing; test first.
+- [x] Providers: configurable Chat Completions, Decisions/System One, and public/API YouTube; tests with controlled responses and partial errors.
+- [x] Orchestrator: limits, progress, cancellation, relevance, and selection; tests.
+- [x] NotebookLM integration: tab detection, batch import through the UI, individual confirmation, resuming, and error messages; validated on simulated pages, including 250 links and interruption during the send.
+- [x] Side panel and visual identity, settings, results, and last-search persistence; visual inspection at panel width.
+- [x] README with installation, keys, running, privacy, and limits; `npm test` and `npm run check`.
 
-Atualização em 02/10/2026: conexões reais foram testadas com o .env autorizado. A busca YouTube funciona sem chave. O navegador disponível exige login do Google para conferir a importação em notebook real. Evidências em [verification.md](verification.md); requisitos adicionais concluídos em [connections-plan.md](connections-plan.md).
+Update on 2026-10-02: real connections were tested with the authorized .env. YouTube search works without a key. The available browser requires a Google sign-in to check imports into a real notebook. Evidence is in [verification.md](verification.md); additional requirements are completed in [connections-plan.md](connections-plan.md).

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const manifest = JSON.parse(readFileSync(resolve(root, 'manifest.json'), 'utf8'));
-if (manifest.manifest_version !== 3) throw new Error('Manifest V3 obrigatório');
+if (manifest.manifest_version !== 3) throw new Error('Manifest V3 is required');
 
 const packaged = [
   manifest.background?.service_worker,
@@ -25,4 +25,4 @@ function checkScripts(directory) {
   }
 }
 checkScripts(root);
-console.log(`Manifest V3 válido: ${packaged.length} referências locais encontradas.`);
+console.log(`Valid Manifest V3: ${packaged.length} local references found.`);

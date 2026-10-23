@@ -7,16 +7,17 @@ const MAX_NODES = 100000;
 const WATCH_CONCURRENCY = 3;
 const VALID_ID = /^[a-zA-Z0-9_-]{11}$/;
 const BLOCK_MESSAGE = /not a bot|unusual traffic|automated queries|confirm.*robot|confirme.*rob[oô]|confirma.*robot|try again later|tente novamente mais tarde/i;
-const fail = message => new Error(`YouTube público: ${message}`);
+const fail = message => new Error(`YouTube public page: ${message}`);
 
 function checkPage(html) {
-  if (typeof html !== 'string' || !html.trim()) throw fail('página vazia; não foi possível ler os dados');
-  if (html.length > MAX_HTML_BYTES) throw fail('a página ultrapassou o limite de tamanho');
+  // The page title and consent text are matched in Portuguese too, since YouTube localizes them.
+  if (typeof html !== 'string' || !html.trim()) throw fail('empty page; could not read the data');
+  if (html.length > MAX_HTML_BYTES) throw fail('the page exceeded the size limit');
   if (/<title[^>]*>\s*(?:Before you continue|Antes de continuar)|<form\b[^>]*action\s*=\s*["']https:\/\/consent\.(?:youtube|google)\.com|consentBumpV2Renderer/i.test(html)) {
-    throw fail('o YouTube exigiu consentimento; a busca sem chave não conseguiu acessar esta página');
+    throw fail('YouTube required consent; the keyless search could not access this page');
   }
   if (/<title[^>]*>[^<]*(?:unusual traffic|sorry)|Our systems have detected unusual traffic|<[^>]+(?:id|class)\s*=\s*["'][^"']*(?:g-recaptcha|captcha-form)/i.test(html)) {
-    throw fail('bloqueio de tráfego ou verificação de robô; tente novamente mais tarde');
+    throw fail('blocked request or bot check; try again later');
   }
 }
 
@@ -39,12 +40,12 @@ function literalEnd(text, start) {
     }
     if (char === '"') quoted = true;
     else if (char === '{' || char === '[') {
-      if (++depth > MAX_DEPTH) throw fail('JSON ultrapassou o limite de profundidade');
+      if (++depth > MAX_DEPTH) throw fail('JSON exceeded the depth limit');
     } else if (char === '}' || char === ']') {
       if (--depth === 0) return i + 1;
     }
   }
-  throw fail('JSON incompleto ou acima do limite de tamanho');
+  throw fail('incomplete JSON or above the size limit');
 }
 
 function pageJson(html, name, required = true) {
@@ -60,9 +61,9 @@ function pageJson(html, name, required = true) {
       start += prefix[0].length;
       if (html[start] !== '"') continue;
       try { source = JSON.parse(html.slice(start, literalEnd(html, start))); }
-      catch (error) { if (error.message?.startsWith('YouTube público:')) throw error; continue; }
+      catch (error) { if (error.message?.startsWith('YouTube public page:')) throw error; continue; }
       if (typeof source !== 'string' || source[0] !== '{') continue;
-      if (source.length > MAX_JSON_CHARS) throw fail('JSON ultrapassou o limite de tamanho');
+      if (source.length > MAX_JSON_CHARS) throw fail('JSON exceeded the size limit');
       literalEnd(source, 0);
     } else {
       if (html[start] !== '{') continue;
@@ -73,7 +74,7 @@ function pageJson(html, name, required = true) {
       if (data && typeof data === 'object' && !Array.isArray(data)) return data;
     } catch { /* A later assignment can contain the complete response. */ }
   }
-  if (required) throw fail(`não foi possível interpretar os dados JSON ${name}; o formato da página pode ter mudado`);
+  if (required) throw fail(`could not parse the JSON data ${name}; the page format may have changed`);
   return null;
 }
 
@@ -120,7 +121,7 @@ function walk(root, visit) {
   while (stack.length) {
     const { node, depth } = stack.pop();
     if (!node || typeof node !== 'object') continue;
-    if (++count > MAX_NODES || depth > MAX_DEPTH) throw fail('dados ultrapassaram o limite de complexidade');
+    if (++count > MAX_NODES || depth > MAX_DEPTH) throw fail('data exceeded the complexity limit');
     if (visit(node) === false) continue;
     const entries = Array.isArray(node) ? node : Object.values(node);
     for (let i = entries.length - 1; i >= 0; i--) stack.push({ node: entries[i], depth: depth + 1 });
@@ -184,7 +185,7 @@ export function parseYouTubeSearchHtml(html, term, settings = {}) {
   checkPage(html);
   const data = pageJson(html, 'ytInitialData');
   const root = data.contents?.twoColumnSearchResultsRenderer?.primaryContents || data.contents?.sectionListRenderer && data.contents;
-  if (!root) throw fail('layout da busca desconhecido; não foi possível interpretar os resultados');
+  if (!root) throw fail('unknown search layout; could not parse the results');
   const results = new Map();
   let recognized = false;
   let message = false;
@@ -201,24 +202,24 @@ export function parseYouTubeSearchHtml(html, term, settings = {}) {
     if (candidate && !results.has(candidate.id)) results.set(candidate.id, candidate);
     if (renderer || node.lockupViewModel || node.shortsLockupViewModel || node.reelItemRenderer) return false;
   });
-  if (!results.size && !recognized && !message && !emptySection) throw fail('formato dos resultados desconhecido; a página pode ter mudado');
+  if (!results.size && !recognized && !message && !emptySection) throw fail('unknown result format; the page may have changed');
   const limit = Math.max(1, Math.min(50, Math.round(Number(settings.resultsPerTerm) || 15)));
   return [...results.values()].slice(0, limit);
 }
 
 export function parseYouTubeWatchHtml(html, video) {
-  if (!VALID_ID.test(video?.id || '')) throw fail('ID de vídeo inválido');
+  if (!VALID_ID.test(video?.id || '')) throw fail('Invalid video ID');
   checkPage(html);
   const player = pageJson(html, 'ytInitialPlayerResponse');
   const status = player.playabilityStatus?.status;
   const reason = textValue(player.playabilityStatus?.reason);
-  if (BLOCK_MESSAGE.test(reason)) throw fail(`bloqueio de tráfego ou robô: ${reason}`);
-  if (typeof status !== 'string' || !status) throw fail('metadados do player sem estado de disponibilidade');
+  if (BLOCK_MESSAGE.test(reason)) throw fail(`blocked request or bot check: ${reason}`);
+  if (typeof status !== 'string' || !status) throw fail('player metadata has no availability state');
   if (status !== 'OK') return { ...video, url: videoUrl(video.id), playabilityStatus: status, captionAvailable: false };
   const details = player.videoDetails;
   const micro = player.microformat?.playerMicroformatRenderer || {};
-  if (!details || details.videoId !== video.id) throw fail('ID ou identidade do vídeo nos metadados não corresponde ao solicitado');
-  if (!textValue(details.title) || typeof details.shortDescription !== 'string') throw fail('metadados incompletos: título ou descrição completa ausente');
+  if (!details || details.videoId !== video.id) throw fail('the video ID or identity in the metadata does not match the requested one');
+  if (!textValue(details.title) || typeof details.shortDescription !== 'string') throw fail('incomplete metadata: title or full description is missing');
   const captionTracks = player.captions?.playerCaptionsTracklistRenderer?.captionTracks;
   return {
     ...video,
@@ -245,11 +246,11 @@ function locale(language, settings) {
 async function readBounded(response, signal) {
   if (Number(response.headers?.get?.('content-length')) > MAX_HTML_BYTES) {
     await response.body?.cancel?.();
-    throw fail('a página ultrapassou o limite de tamanho');
+    throw fail('the page exceeded the size limit');
   }
   if (!response.body?.getReader) {
     const html = await response.text();
-    if (new TextEncoder().encode(html).byteLength > MAX_HTML_BYTES) throw fail('a página ultrapassou o limite de tamanho');
+    if (new TextEncoder().encode(html).byteLength > MAX_HTML_BYTES) throw fail('the page exceeded the size limit');
     return html;
   }
   const reader = response.body.getReader();
@@ -265,7 +266,7 @@ async function readBounded(response, signal) {
       signal?.throwIfAborted();
       if (done) break;
       total += value.byteLength;
-      if (total > MAX_HTML_BYTES) { await reader.cancel(); throw fail('a página ultrapassou o limite de tamanho'); }
+      if (total > MAX_HTML_BYTES) { await reader.cancel(); throw fail('the page exceeded the size limit'); }
       html += decoder.decode(value, { stream: true });
     }
     return html + decoder.decode();
@@ -292,25 +293,25 @@ async function publicPage(url, fetchImpl, signal) {
     });
   } catch (error) {
     signal?.throwIfAborted();
-    if (timeout.aborted) throw fail('a página demorou demais para responder');
-    throw fail(`não foi possível acessar a página pública; pode haver redirecionamento de consentimento ou bloqueio (${error.message || 'erro de rede'})`);
+    if (timeout.aborted) throw fail('the page took too long to respond');
+    throw fail(`could not access the public page; a consent redirect or block may be in place (${error.message || 'network error'})`);
   }
   requestSignal.throwIfAborted();
   if (response.url) {
     const final = new URL(response.url);
     const isYouTube = final.protocol === 'https:' && (final.hostname === 'youtube.com' || final.hostname.endsWith('.youtube.com'));
     const isGoogleConsent = final.protocol === 'https:' && (final.hostname === 'consent.youtube.com' || final.hostname === 'consent.google.com' || final.hostname.endsWith('.google.com'));
-    if (!isYouTube && !isGoogleConsent) throw fail('redirecionamento fora do YouTube bloqueado');
+    if (!isYouTube && !isGoogleConsent) throw fail('redirect outside YouTube blocked');
   }
   if (!response.ok) {
     await response.body?.cancel?.();
-    throw fail(`a página respondeu HTTP ${response.status}; tente novamente mais tarde`);
+    throw fail(`the page responded with HTTP ${response.status}; try again later`);
   }
   return readBounded(response, requestSignal);
 }
 
 export async function searchYouTubeWeb(term, settings = {}, fetchImpl = fetch, signal) {
-  if (!term || typeof term.query !== 'string' || !term.query.trim()) throw fail('termo de busca vazio');
+  if (!term || typeof term.query !== 'string' || !term.query.trim()) throw fail('empty search term');
   const url = new URL('https://www.youtube.com/results');
   url.search = new URLSearchParams({ search_query: term.query.trim().slice(0, 180), ...locale(term.language, settings), sp: settings.captionedOnly === false ? 'EgIQAQ==' : 'EgQQASgB' }).toString();
 
@@ -324,16 +325,16 @@ export async function searchYouTubeWeb(term, settings = {}, fetchImpl = fetch, s
     } catch (error) {
       lastError = error;
       signal?.throwIfAborted();
-      if (/exigiu consentimento|verificação de robô|layout da busca desconhecido|formato dos resultados desconhecido|ultrapassou o limite|ID de vídeo inválido/i.test(error.message)) {
+      if (/required consent|bot check|unknown search layout|unknown result format|exceeded the size limit|Invalid video ID/i.test(error.message)) {
         throw error;
       }
       if (attempt < maxAttempts) {
-        console.warn(`[TubeLess YouTube Web] Tentativa ${attempt}/${maxAttempts} falhou para "${term.query}": ${error.message}. Aguardando retry...`);
+        console.warn(`[TubeLess YouTube Web] Attempt ${attempt}/${maxAttempts} failed for "${term.query}": ${error.message}. Waiting to retry...`);
         const delay = attempt * 300;
         await new Promise(resolve => setTimeout(resolve, delay));
         signal?.throwIfAborted();
       } else {
-        console.error(`[TubeLess YouTube Web] Falha definitiva após ${maxAttempts} tentativas para "${term.query}": ${error.message}`);
+        console.error(`[TubeLess YouTube Web] Final failure after ${maxAttempts} attempts for "${term.query}": ${error.message}`);
       }
     }
   }
@@ -363,7 +364,7 @@ export async function enrichYouTubeWeb(videos, settings = {}, fetchImpl = fetch,
         } catch (error) {
           if (error.name === 'AbortError' || signal?.aborted) throw error;
           lastErr = error;
-          if (/ID de vídeo inválido|exigiu consentimento|bloqueio de tráfego/i.test(error.message)) break;
+          if (/Invalid video ID|required consent|blocked request/i.test(error.message)) break;
           if (attempt < maxAttempts) {
             await new Promise(resolve => setTimeout(resolve, attempt * 200));
           }
@@ -371,7 +372,7 @@ export async function enrichYouTubeWeb(videos, settings = {}, fetchImpl = fetch,
       }
       if (lastErr) {
         signal?.throwIfAborted();
-        results[index] = { ...video, url: VALID_ID.test(video?.id || '') ? videoUrl(video.id) : '', captionAvailable: undefined, playabilityStatus: 'UNKNOWN', detailError: lastErr.message || 'YouTube público: falha ao obter os metadados' };
+        results[index] = { ...video, url: VALID_ID.test(video?.id || '') ? videoUrl(video.id) : '', captionAvailable: undefined, playabilityStatus: 'UNKNOWN', detailError: lastErr.message || 'YouTube public page: failed to get the metadata' };
       }
     }
   };

@@ -1,51 +1,51 @@
-# Registro de verificação
+# Verification log
 
-Data: 02/10/2026. Extensão 1.3.0. Chrome 154.0.8037.93 no Windows. Os registros de chamadas reais abaixo foram executados na versão 1.2.0; as versões seguintes acrescentam os idiomas rápidos, a avaliação de até 250 vídeos com paralelismo ajustável e a importação em lote. A versão atual foi novamente verificada com testes unitários, validação e o fluxo de navegador com respostas controladas.
+Date: 2026-10-02. Extension 1.3.0. Chrome 154.0.8037.93 on Windows. The live call logs below were run on version 1.2.0; the later versions add quick languages, evaluation of up to 250 videos with adjustable parallelism, and batch import. The current version was verified again with unit tests, validation, and the browser flow with controlled responses.
 
-## Executado
+## Executed
 
-| Verificação | Resultado |
+| Check | Result |
 | --- | --- |
-| `npm test` | 86 testes aprovados; nenhum ignorado |
-| `npm run check` | Sintaxe aprovada e 9 referências do manifest encontradas |
-| Painel carregado como extensão real no Chrome | Presets independentes, restauração de URL e limpeza da chave ao trocar domínio aprovados |
-| Botão de conexões | Geração, avaliação e YouTube aprovados; valores não salvos não alteram configurações persistidas |
-| Cancelamento | Chamadas interrompidas e campos reativados |
-| Idiomas rápidos | Seleção no formulário, persistência ao reabrir, sincronização com Configurações, idiomas personalizados e limites de um a cinco aprovados; busca em espanhol e continuação em inglês enviaram os respectivos idiomas ao gerador e ao YouTube |
-| Avaliação de 250 vídeos | Pipeline com respostas controladas avaliou 250 de 260 candidatos, preservou erro individual, ordenação e progresso de 0 a 250 |
-| Paralelismo ajustável | Testes mediram picos de 1, 8 e 16 avaliações em execução; configuração ausente usa 8; cancelamento interrompeu as oito chamadas ativas sem iniciar os vídeos pendentes |
-| Limites no Chrome | Campos aceitam 250 vídeos e 16 chamadas simultâneas, rejeitam valores acima e mantêm os valores salvos ao reabrir |
-| Relevância | Ordem 97%, 80%, 20% confirmada na busca; ordem mantida ao restaurar resultados salvos |
-| Seleção e cópia | Relevantes pré-selecionados, desmarcar tudo, seleção persistida e texto copiado para a área de transferência confirmados |
-| Continuar buscando no Chrome | Novos resultados mesclados, sem duplicatas; desmarcações anteriores mantidas e novo relevante selecionado |
-| Catálogo LiteLLM real | Download na extensão e filtros por provedor/formato aprovados; atualização não substitui nome personalizado; cópia local funciona offline |
-| Destino obrigatório | Página inicial do NotebookLM não é tratada como notebook; sem notebook aberto, há aviso e erro, sem criar aba ou fila, mesmo com link configurado |
-| Importação em lote | Painel e content script reais confirmaram três fontes em um único envio; fixture adicional confirmou 250 links colados uma vez |
-| Separadores e escolha de formulário | Área de texto recebe quebras de linha; campo de texto recebe espaços; Sites/Links é preferido quando a opção YouTube também aparece |
-| Lote parcial | Um item confirmado foi mantido; dois itens exigiram revisão individual; Retomar enviou apenas os dois restantes e não duplicou a fonte anterior |
-| Interrupção e persistência | Recarregar o painel durante o envio preservou três itens uncertain; mesmo após recarregar o notebook, a retomada ficou bloqueada até revisão explícita, sem nova submissão |
-| Destino fechado ou trocado | Fila com destino fechado não abriu outra aba nem usou outro notebook disponível; mudança A→B durante a preparação não enviou fontes a B; content script recusou notebookUrl incompatível |
-| Confirmação e duplicatas | Fontes com rótulos acessíveis sem href são confirmadas e lembradas na mesma página; títulos equivalentes com entidades HTML não confirmam duas fontes pela aparição de uma só |
-| Localização dinâmica integrada | Mensagens conteúdo → worker → provedor Choice simulado → conteúdo confirmaram três fontes em um único lote; houve somente uma chamada ao modelo |
-| Jev Choice real | Chamada real com os candidatos Cancelar/Inserir fonte retornou o ID correto |
-| Fixtures de Notebook | Quinze cenários passaram, incluindo lote de 250 URLs, entrada parcial, retomada, destino incompatível, separadores, títulos ambíguos e os sete cenários anteriores de localização/privacidade |
-| Conexões reais no contexto da extensão | OpenRouter Chat Completions, Jev Decisions e YouTube público aprovados |
-| Geração real em Node | OpenAI `gpt-5-mini`, Groq `openai/gpt-oss-120b`, DeepSeek `deepseek-chat` e OpenRouter `google/gemini-2.5-flash` aprovados |
-| Fluxo real em Node | Geração multilíngue, busca pública, detalhes e avaliação concluídos com Groq + Jev/OpenRouter e com DeepSeek para ambas as chamadas; continuação real gerou dois novos termos, avaliou dois novos vídeos e terminou com quatro sem duplicatas |
-| Correções da revisão | Regressões cobrem chaves pareadas com seu endpoint e filtro de legendas no modo oficial |
-| Revisão independente das correções | Achados sobre títulos privados e prazo do worker corrigidos e reconferidos; sem achados pendentes. O worker usa prazo de 25 segundos |
-| Revisão independente do lote | Corrida de destino, normalização de títulos e persistência antes do envio corrigidas e reconferidas; sem achados altos ou médios pendentes |
-| Layout do painel | Último cartão permanece acessível acima do painel fixo de seleção |
+| `npm test` | 86 tests passed; none skipped |
+| `npm run check` | Syntax passed and 9 manifest references found |
+| Panel loaded as a real extension in Chrome | Independent presets, URL restoration, and key clearing when switching domains approved |
+| Connections button | Generation, evaluation, and YouTube approved; unsaved values do not change persisted settings |
+| Cancellation | Interrupted calls and re-enabled fields |
+| Quick languages | Selection in the form, persistence when reopened, sync with Settings, custom languages, and one-to-five limits approved; Spanish search and English continuation sent the respective languages to the generator and to YouTube |
+| 250-video evaluation | Pipeline with controlled responses evaluated 250 of 260 candidates, kept individual errors, ordering, and progress from 0 to 250 |
+| Adjustable parallelism | Tests measured peaks of 1, 8, and 16 evaluations running at once; a missing setting uses 8; cancellation stopped the eight active calls without starting pending videos |
+| Limits in Chrome | Fields accept 250 videos and 16 simultaneous calls, reject higher values, and keep saved values when reopened |
+| Relevance | Order 97%, 80%, 20% confirmed in the search; order kept when restoring saved results |
+| Selection and copy | Relevant ones pre-selected, clear selection, persisted selection, and copied text to the clipboard confirmed |
+| Continue searching in Chrome | New results merged without duplicates; earlier deselections kept and the new relevant one selected |
+| Real LiteLLM catalog | Download in the extension and filters by provider/format approved; refresh does not replace a custom name; local copy works offline |
+| Required destination | NotebookLM home page is not treated as a notebook; with no notebook open, there is a warning and an error, without creating a tab or queue, even with a configured link |
+| Batch import | Real panel and content script confirmed three sources in a single send; an additional fixture confirmed 250 links pasted once |
+| Separators and form choice | Text area receives line breaks; single-line field receives spaces; Websites/Links is preferred when the YouTube option also appears |
+| Partial batch | One confirmed item was kept; two items required individual review; Resume sent only the two remaining and did not duplicate the earlier source |
+| Interruption and persistence | Reloading the panel during the send preserved three uncertain items; even after reloading the notebook, resuming stayed blocked until explicit review, with no new submission |
+| Closed or changed destination | A queue with a closed destination did not open another tab or use another available notebook; an A→B change during preparation did not send sources to B; the content script rejected an incompatible notebookUrl |
+| Confirmation and duplicates | Sources with accessible labels and no href are confirmed and remembered on the same page; equivalent titles with HTML entities do not confirm two sources from the appearance of only one |
+| Integrated dynamic location | Messages content → worker → simulated Choice provider → content confirmed three sources in a single batch; there was only one model call |
+| Real Jev Choice | Real call with the Cancel/Insert source candidates returned the correct ID |
+| Notebook fixtures | Fifteen scenarios passed, including a batch of 250 URLs, partial input, resuming, incompatible destination, separators, ambiguous titles, and the seven earlier location/privacy scenarios |
+| Real connections in the extension context | OpenRouter Chat Completions, Jev Decisions, and public YouTube approved |
+| Real generation in Node | OpenAI `gpt-5-mini`, Groq `openai/gpt-oss-120b`, DeepSeek `deepseek-chat`, and OpenRouter `google/gemini-2.5-flash` approved |
+| Real flow in Node | Multilingual generation, public search, details, and evaluation completed with Groq + Jev/OpenRouter and with DeepSeek for both calls; a real continuation generated two new terms, evaluated two new videos, and ended with four without duplicates |
+| Review fixes | Regressions cover keys paired with their endpoint and the caption filter in official mode |
+| Independent review of the fixes | Findings about private titles and the worker deadline fixed and rechecked; no pending findings. The worker uses a 25-second deadline |
+| Independent review of the batch | Target race, title normalization, and persistence before sending fixed and rechecked; no pending high or medium findings |
+| Panel layout | The last card stays accessible above the fixed selection panel |
 
-As chaves do .env foram carregadas por código e não impressas. Os testes Chrome usam um perfil temporário isolado e removem suas configurações ao terminar. Capturas locais ficam em `.test-artifacts/`, fora da distribuição.
+The .env keys were loaded by code and not printed. The Chrome tests use an isolated temporary profile and remove their settings when finished. Local captures are kept in `.test-artifacts/`, outside the distribution.
 
-## Limites concretos
+## Concrete limits
 
-- **Nova importação em lote ainda não validada em conta autenticada:** o usuário confirmou a inserção individual na versão anterior. Nesta sessão, o navegador disponível abriu a tela de login do Google; os novos testes usam páginas simuladas e não comprovam compatibilidade do lote com o DOM atual da conta.
-- TypeSafe direto e YouTube Data API oficial foram verificados por contratos e respostas controladas; não havia chaves desses serviços no .env utilizado.
-- Outros modelos e endpoints personalizados precisam passar pelo botão **Testar conexões** com sua configuração. A compatibilidade genérica não garante acesso a qualquer modelo.
-- A busca pública depende das páginas do YouTube; não elimina bloqueios de robôs ou mudanças de layout. A avaliação considera metadados, não o conteúdo audiovisual.
+- **New batch import not yet validated on an authenticated account:** the user confirmed individual insertion in the previous version. In this session, the available browser opened the Google sign-in screen; the new tests use simulated pages and do not prove the batch is compatible with the current account DOM.
+- TypeSafe direct and the official YouTube Data API were verified through contracts and controlled responses; there were no keys for these services in the .env used.
+- Other models and custom endpoints must go through the **Test connections** button with your configuration. Generic compatibility does not guarantee access to any model.
+- Public search depends on YouTube's pages; it does not eliminate bot blocks or layout changes. Evaluation considers metadata, not the audiovisual content.
 
-## Distribuição
+## Distribution
 
-`npm run package` gera `dist/TubeLess-1.3.0.zip` com uma lista explícita de arquivos. O pacote contém a extensão, cópia compacta do catálogo, licença e instruções de uso; exclui .env, testes, scripts de desenvolvimento e perfis de navegador. A instalação é por extração e **Carregar sem compactação** em `chrome://extensions`. O ZIP é aberto por leitor independente, seus arquivos comparados com os originais e os valores das quatro chaves verificados como ausentes.
+`npm run package` generates `dist/TubeLess-1.3.0.zip` with an explicit list of files. The package contains the extension, the compact copy of the catalog, the license, and usage instructions; it excludes .env, tests, development scripts, and browser profiles. Installation is by extraction and **Load unpacked** in `chrome://extensions`. The ZIP was opened by an independent reader, its files compared with the originals, and the values of the four keys verified as absent.

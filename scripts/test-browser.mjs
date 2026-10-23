@@ -17,7 +17,7 @@ const live = process.argv.includes('--live');
 const secrets = [];
 let context;
 let panel;
-let activeCheck = 'inicialização';
+let activeCheck = 'startup';
 const samples = [
   { id: 'abc12345678', title: 'Solar intermediário', probability: 0.8 },
   { id: 'def12345678', title: 'Solar principal', probability: 0.97 },
@@ -98,7 +98,7 @@ try {
   const pageErrors = [];
   panel.on('pageerror', error => pageErrors.push(error.message));
   await panel.goto(`chrome-extension://${id}/panel.html`);
-  await check('idiomas rápidos mantêm pelo menos um idioma e persistem a seleção', async () => {
+  await check('quick languages keep at least one language and persist the selection', async () => {
     const language = code => panel.locator(`#languageOptions input[value="${code}"]`);
     await language('pt').waitFor({ timeout: 3000 });
     assert.equal(await language('pt').isChecked(), true);
@@ -124,7 +124,7 @@ try {
     await panel.screenshot({ path: resolve(artifacts, 'quick-languages.png') });
   });
   await panel.locator('#settingsToggle').click();
-  await check('catálogo por provedor e nomes personalizados independentes', async () => {
+  await check('catalog per provider and independent custom names', async () => {
     await panel.waitForFunction(() => document.querySelectorAll('#llmModelChoice option').length > 2);
     await panel.locator('#llmPreset').selectOption('groq');
     assert.ok(await panel.locator('#llmModelChoice option[value="openai/gpt-oss-120b"]').count());
@@ -159,7 +159,7 @@ try {
     await panel.locator('#evaluationPreset').selectOption('openrouter');
   });
   await panel.screenshot({ path: resolve(artifacts, 'settings.png') });
-  await check('configuração, presets e restauração segura de URL', async () => {
+  await check('settings, presets, and safe URL restore', async () => {
     assert.equal(await panel.locator('#llmBaseUrl').inputValue(), 'https://api.openai.com/v1');
     await panel.locator('#llmPreset').selectOption('groq');
     assert.equal(await panel.locator('#llmBaseUrl').inputValue(), 'https://api.groq.com/openai/v1');
@@ -208,7 +208,7 @@ try {
   await context.route('https://i.ytimg.com/**', route => route.abort());
   const settings = normalizeSettings({ llmBaseUrl: 'https://openrouter.ai/api/v1', llmApiKey: 'fake-generator', expansionModel: 'google/gemini-2.5-flash', evaluationApiKey: 'fake-evaluator', termsPerLanguage: 1 });
   await store(settings);
-  await check('limite de 250 vídeos e paralelismo são configuráveis e persistidos', async () => {
+  await check('the video limit and parallelism are configurable and persisted', async () => {
     assert.equal(await panel.locator('#evaluationConcurrency').inputValue(), '8');
     await panel.locator('#maxEvaluations').fill('251');
     assert.equal(await panel.locator('#maxEvaluations').evaluate(input => input.validity.valid), false);
@@ -228,7 +228,7 @@ try {
     await panel.locator('#maxEvaluations').scrollIntoViewIfNeeded();
     await panel.screenshot({ path: resolve(artifacts, 'evaluation-settings.png') });
   });
-  await check('teste das conexões pelo painel sem salvar valores novos', async () => {
+  await check('connection test in the panel without saving new values', async () => {
     await panel.locator('#llmApiKey').fill('fake-unsaved-generator');
     await panel.locator('#testConnections').click();
     await panel.waitForFunction(() => document.querySelectorAll('.connection-result.ok').length === 3);
@@ -242,12 +242,12 @@ try {
     await panel.locator('#testConnections').click();
     await panel.waitForFunction(() => document.querySelectorAll('.connection-result.testing').length > 0);
     await panel.locator('#testConnections').click();
-    await panel.waitForFunction(() => document.querySelector('#testConnections').textContent === 'Testar conexões');
+    await panel.waitForFunction(() => document.querySelector('#testConnections').textContent === 'Test connections');
     assert.equal(await panel.locator('#llmBaseUrl').isEnabled(), true);
     assert.equal(await panel.locator('.connection-result.testing').count(), 0);
     slow = false;
   });
-  await check('busca e restauração mantêm vídeos em ordem de relevância', async () => {
+  await check('search and restore keep videos in relevance order', async () => {
     await panel.locator('#saveSettings').click();
     await panel.locator('#languageOptions input[value="es"]').check();
     await panel.locator('#languageOptions input[value="pt"]').uncheck();
@@ -281,7 +281,7 @@ try {
     assert.equal(await panel.locator('.select-video:checked').count(), 0);
     await panel.screenshot({ path: resolve(artifacts, 'ranked-results.png') });
   });
-  await check('continuar buscando preserva desmarcações e seleciona novos relevantes', async () => {
+  await check('continue searching keeps deselections and selects new relevant videos', async () => {
     continuationSearch = true;
     await panel.locator('#languageOptions input[value="en"]').check();
     await panel.locator('#languageOptions input[value="es"]').uncheck();
@@ -294,16 +294,16 @@ try {
     assert.equal(await panel.locator('.select-video:checked').count(), 1);
     assert.equal(await panel.locator('.select-video').nth(1).isChecked(), true);
     await panel.locator('#continueSearch').click();
-    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('não gerou termos novos'));
+    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('generated no new terms'));
     assert.equal(await panel.locator('.video-card').count(), 3);
     assert.equal(await panel.locator('.select-video:checked').count(), 1);
     await panel.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     const lastCard = await panel.locator('.video-card').last().boundingBox();
     const dock = await panel.locator('#importDock').boundingBox();
-    assert.ok(lastCard.y + lastCard.height <= dock.y, 'Último resultado precisa ficar acessível acima da seleção fixa.');
+    assert.ok(lastCard.y + lastCard.height <= dock.y, 'The last result must stay accessible above the fixed selection.');
     await panel.screenshot({ path: resolve(artifacts, 'continued-results.png') });
   });
-  await check('sem notebook aberto exibe aviso e não abre destino automaticamente', async () => {
+  await check('no notebook open shows a warning and does not open a destination automatically', async () => {
     const home = await context.newPage();
     await context.route('https://notebook.google.com/', route => route.fulfill({ contentType: 'text/html', body: '<h1>Seus notebooks</h1>' }));
     await home.goto('https://notebook.google.com/');
@@ -317,13 +317,13 @@ try {
     assert.equal(await panel.locator('#notebookNotice').isVisible(), true);
     const before = await panel.evaluate(async () => (await chrome.tabs.query({})).length);
     await panel.locator('#importButton').click();
-    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('Nenhum notebook do NotebookLM está aberto'));
+    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('no notebook is open'));
     assert.equal(await panel.evaluate(async () => (await chrome.tabs.query({})).length), before);
     assert.equal(await panel.evaluate(async () => (await chrome.storage.local.get('importQueue')).importQueue), undefined);
     await panel.screenshot({ path: resolve(artifacts, 'no-notebook.png') });
     await home.close();
   });
-  await check('importação em lote completa três fontes em um único envio', async () => {
+  await check('batch import completes three sources in a single send', async () => {
     await context.route('https://notebook.google.com/notebook/fixture123', route => route.fulfill({ contentType: 'text/html', body: modernNotebookHtml('Inserir') }));
     const notebook = await context.newPage();
     await notebook.goto('https://notebook.google.com/notebook/fixture123');
@@ -335,7 +335,7 @@ try {
     assert.equal(await panel.evaluate(async () => (await chrome.storage.local.get('importQueue')).importQueue), undefined);
     await notebook.close();
   });
-  await check('painel revisa lote parcial e retoma somente links não confirmados', async () => {
+  await check('panel reviews a partial batch and resumes only unconfirmed links', async () => {
     await context.route('https://notebook.google.com/notebook/partial123', route => route.fulfill({ contentType: 'text/html', body: modernNotebookHtml('Inserir') }));
     const notebook = await context.newPage();
     await notebook.goto('https://notebook.google.com/notebook/partial123');
@@ -354,7 +354,7 @@ try {
     });
     await panel.locator('#selectAll').click();
     await panel.locator('#importButton').click();
-    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('2 item(ns) do lote exigem revisão'));
+    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('item(s) in the batch need review'));
     const partial = await panel.evaluate(async () => (await chrome.storage.local.get('importQueue')).importQueue);
     assert.equal(partial.completed.length, 1);
     assert.equal(partial.failures.length, 2);
@@ -363,7 +363,7 @@ try {
     assert.ok((await panel.locator('#pendingDetail').textContent()).includes('Fonte a revisar:'));
     assert.ok((await panel.locator('#pendingDetail').textContent()).includes('Solar ampliação'));
     await panel.locator('#pendingRetry').click();
-    await panel.waitForFunction(() => document.querySelector('#pendingDetail').textContent.includes('1 item(ns) aguardando revisão'));
+    await panel.waitForFunction(() => document.querySelector('#pendingDetail').textContent.includes('1 item(s) waiting for review'));
     await panel.locator('#pendingRetry').click();
     await panel.waitForFunction(() => document.querySelector('#pendingRetry').classList.contains('hidden'));
     await panel.locator('#pendingResume').click();
@@ -375,7 +375,7 @@ try {
     assert.equal(await panel.evaluate(async () => (await chrome.storage.local.get('importQueue')).importQueue), undefined);
     await notebook.close();
   });
-  await check('fechar painel durante envio mantém revisão obrigatória após recarregar notebook', async () => {
+  await check('closing the panel during a send keeps the review required after reloading the notebook', async () => {
     await context.route('https://notebook.google.com/notebook/reload123', route => route.fulfill({ contentType: 'text/html', body: modernNotebookHtml('Inserir') }));
     const notebook = await context.newPage();
     await notebook.goto('https://notebook.google.com/notebook/reload123');
@@ -410,7 +410,7 @@ try {
     assert.equal(await panel.locator('#pendingResume').isDisabled(), true);
     assert.equal(await panel.locator('#importButton').isDisabled(), true);
     await panel.locator('#importButton').evaluate(button => button.dispatchEvent(new MouseEvent('click', { bubbles: true })));
-    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('Revise as fontes sem confirmação'));
+    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('Review the unconfirmed sources'));
     assert.equal(await notebook.evaluate(() => window.submissions), 0);
     for (let remaining = 2; remaining >= 0; remaining--) {
       await panel.locator('#pendingConfirm').click();
@@ -421,7 +421,7 @@ try {
     assert.equal(await notebook.evaluate(() => window.submissions), 0);
     await notebook.close();
   });
-  await check('localizador dinâmico passa pelo worker e reutiliza controle salvo', async () => {
+  await check('dynamic locator goes through the worker and reuses the saved control', async () => {
     await context.route('https://notebook.google.com/notebook/dynamic123', route => route.fulfill({ contentType: 'text/html', body: modernNotebookHtml('Finalizar conexão') }));
     const notebook = await context.newPage();
     await notebook.goto('https://notebook.google.com/notebook/dynamic123');
@@ -435,7 +435,7 @@ try {
     assert.ok(Object.values(cache.scopes).some(scope => scope.entries.submit.label === 'Finalizar conexão'));
     await notebook.close();
   });
-  await check('fila não abre automaticamente um destino fechado mesmo com outro notebook aberto', async () => {
+  await check('queue does not automatically open a closed destination even with another notebook open', async () => {
     await context.route('https://notebook.google.com/notebook/other123', route => route.fulfill({ contentType: 'text/html', body: modernNotebookHtml('Inserir') }));
     const other = await context.newPage();
     await other.goto('https://notebook.google.com/notebook/other123');
@@ -448,14 +448,14 @@ try {
     await panel.waitForFunction(() => !document.querySelector('#pendingNotice').classList.contains('hidden'));
     const before = await panel.evaluate(async () => (await chrome.tabs.query({})).length);
     await panel.locator('#pendingResume').click();
-    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('O notebook de destino não está aberto'));
+    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('The original notebook of the pending import is not open'));
     assert.equal(await panel.evaluate(async () => (await chrome.tabs.query({})).length), before);
     assert.equal(await other.evaluate(() => window.submissions), 0);
     assert.equal(await panel.locator('#notebookNotice').isVisible(), true);
     await panel.locator('#pendingDiscard').click();
     await other.close();
   });
-  await check('troca de notebook durante preparação bloqueia o envio ao destino errado', async () => {
+  await check('switching notebooks during preparation blocks sending to the wrong destination', async () => {
     await context.route('https://notebook.google.com/notebook/raceA', route => route.fulfill({ contentType: 'text/html', body: modernNotebookHtml('Inserir') }));
     await context.route('https://notebook.google.com/notebook/raceB', route => route.fulfill({ contentType: 'text/html', body: modernNotebookHtml('Inserir') }));
     const notebook = await context.newPage();
@@ -474,7 +474,7 @@ try {
   if (process.argv.includes('--catalog-live')) {
     await context.unroute('https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json');
     await panel.locator('#settingsToggle').click();
-    await check('catálogo LiteLLM real baixado no contexto da extensão', async () => {
+    await check('real LiteLLM catalog downloaded in the extension context', async () => {
       const previousModel = await panel.locator('#expansionModel').inputValue();
       await panel.locator('#refreshModels').click();
       await panel.waitForFunction(() => document.querySelector('#catalogStatus').textContent === 'Lista atualizada.', null, { timeout: 20000 });
@@ -498,7 +498,7 @@ try {
     if (!key) throw new Error('O teste ao vivo no Chrome precisa de OPENROUTER_API_KEY no .env.');
     secrets.push(key);
     await store(normalizeSettings({ llmBaseUrl: 'https://openrouter.ai/api/v1', llmApiKey: key, expansionModel: 'google/gemini-2.5-flash', evaluationApiKey: key, termsPerLanguage: 1, resultsPerTerm: 2, maxEvaluations: 2 }));
-    await check('chamadas reais de geração, avaliação e YouTube no contexto da extensão', async () => {
+    await check('real generation, evaluation, and YouTube calls in the extension context', async () => {
       await panel.locator('#testConnections').click();
       await panel.waitForFunction(() => document.querySelectorAll('.connection-result.ok, .connection-result.error').length === 3, null, { timeout: 75000 });
       const messages = await panel.locator('.connection-result').allTextContents();
@@ -510,12 +510,12 @@ try {
   console.log(`Chrome: ${context.browser().version()}. Capturas em .test-artifacts/.`);
 } catch (error) {
   console.error(`Etapa: ${activeCheck}`);
-  if (panel && !panel.isClosed()) console.error(await panel.evaluate(() => ({ catalogStatus: document.querySelector('#catalogStatus')?.textContent, models: document.querySelectorAll('#llmModelChoice option').length, message: document.querySelector('#messageBox')?.textContent, importProgress: document.querySelector('#importProgress')?.textContent, notebookTarget: document.querySelector('#notebookTabs')?.value })).catch(() => 'Painel indisponível'));
-  if (panel && !panel.isClosed() && activeCheck.includes('catálogo')) console.error(await panel.evaluate(async () => {
+  if (panel && !panel.isClosed()) console.error(await panel.evaluate(() => ({ catalogStatus: document.querySelector('#catalogStatus')?.textContent, models: document.querySelectorAll('#llmModelChoice option').length, message: document.querySelector('#messageBox')?.textContent, importProgress: document.querySelector('#importProgress')?.textContent, notebookTarget: document.querySelector('#notebookTabs')?.value })).catch(() => 'Panel unavailable'));
+  if (panel && !panel.isClosed() && activeCheck.includes('catalog')) console.error(await panel.evaluate(async () => {
     const { ModelCatalog } = await import('./core/models.js');
     try { return { catalogProviders: Object.keys((await new ModelCatalog().load()).providers) }; }
     catch (error) { return { catalogError: error.message }; }
-  }).catch(() => 'Diagnóstico indisponível'));
+  }).catch(() => 'Diagnostics unavailable'));
   console.error(sanitizeError(error.message, secrets));
   process.exitCode = 1;
 } finally {

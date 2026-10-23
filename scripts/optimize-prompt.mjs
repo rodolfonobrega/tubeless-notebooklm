@@ -8,76 +8,77 @@ if (existsSync(localEnv)) loadEnvFile(localEnv);
 
 const settings = settingsFromEnv(process.env, { provider: 'openai' });
 
+// The topics stay in Portuguese on purpose: they test conversational and technical input in another language.
 const TEST_CASES = [
   {
     topic: 'eu quero aprender a usar o sketchup',
-    description: 'Intenção conversacional informal de aprendizado',
+    description: 'Informal conversational learning intent',
     languages: ['pt', 'en']
   },
   {
     topic: 'curso sketchup',
-    description: 'Termo curto e direto',
+    description: 'Short and direct term',
     languages: ['pt', 'en']
   },
   {
     topic: 'LLMs para engenharia reversa de software',
-    description: 'Tópico técnico avançado (caso do erro do usuário)',
+    description: 'Advanced technical topic (the user-reported failure case)',
     languages: ['pt', 'en']
   },
   {
     topic: 'como investir em fundos imobiliários do zero',
-    description: 'Finanças/prático em linguagem natural',
+    description: 'Practical finance topic in natural language',
     languages: ['pt']
   }
 ];
 
-// Baseline prompt (atual no código)
+// Baseline prompt (the one used in the code at the time)
 function buildBaselinePrompt(topic, languages, termsPerLanguage, continuation = '') {
-  return `Tema de pesquisa no YouTube: ${JSON.stringify(topic)}. Gere ${termsPerLanguage} consultas diferentes para cada idioma: ${languages.join(', ')}. Varie sinônimos, ângulos, tradução e termos técnicos sem mudar o tema.${continuation} Responda apenas JSON: um objeto cujas chaves são códigos de idioma e cujos valores são arrays de strings. Não acrescente explicações.`;
+  return `YouTube search topic: ${JSON.stringify(topic)}. Generate ${termsPerLanguage} different queries for each language: ${languages.join(', ')}. Vary synonyms, angles, translation and technical terms without changing the topic.${continuation} Respond only with JSON: an object whose keys are language codes and whose values are arrays of strings. Do not add explanations.`;
 }
 
-// Prompt Candidato 1: Otimizado com orientações para YouTube
+// Candidate prompt 1: optimized with YouTube guidance
 function buildCandidatePromptV1(topic, languages, termsPerLanguage, continuation = '') {
-  return `Você é um especialista em busca e descoberta de vídeos no YouTube.
-O usuário quer encontrar os melhores vídeos sobre o tema: ${JSON.stringify(topic)}.
+  return `You are an expert in YouTube video search and discovery.
+The user wants to find the best videos about this topic: ${JSON.stringify(topic)}.
 
-Sua tarefa é gerar ${termsPerLanguage} termos de pesquisa altamente eficazes no YouTube para cada idioma: ${languages.join(', ')}.
+Your task is to generate ${termsPerLanguage} highly effective YouTube search terms for each language: ${languages.join(', ')}.
 
-Diretrizes essenciais para o YouTube:
-1. Como usuários e criadores pensam: No YouTube, buscas eficazes usam palavras-chave diretas e naturais (2 a 6 palavras). Não use frases longas de artigo acadêmico nem títulos de papers.
-2. Limpeza de intenção: Remova ruídos conversacionais ("eu quero aprender...", "como faço para...", "me mostre vídeos de..."). Transforme em intenção real de busca (ex: "eu quero aprender sketchup" -> "sketchup tutorial iniciante", "sketchup passo a passo", "sketchup curso basico").
-3. Variação inteligente de ângulos: Para cada idioma, gere termos com abordagens complementares úteis (ex: tutorial/iniciante, curso completo/passo a passo, ferramentas práticas/demonstração).
-4. Sem pontuação ou operadores desnecessários: NUNCA use dois pontos (:), ponto e vírgula (;), aspas ou travessões.
-5. Adaptação idiomática nativa: Gere termos idiomáticos autênticos como criadores e espectadores daquele idioma realmente escrevem no YouTube (ex: em inglês, prefira "beginner tutorial", "crash course", "complete guide", "step by step").${continuation}
+Essential YouTube guidelines:
+1. How users and creators think: On YouTube, effective searches use direct, natural keywords (2 to 6 words). Do not use long academic phrases or paper titles.
+2. Intent cleanup: Remove conversational noise ("I want to learn...", "how do I...", "show me videos of..."). Turn it into a real search intent (e.g. "I want to learn sketchup" -> "sketchup beginner tutorial", "sketchup step by step", "sketchup basic course").
+3. Smart angle variation: For each language, generate terms with useful complementary approaches (e.g. tutorial/beginner, full course/step by step, practical tools/demonstration).
+4. No unnecessary punctuation or operators: NEVER use colons (:), semicolons (;), quotation marks or dashes.
+5. Native idiomatic adaptation: Generate authentic terms the way creators and viewers of that language really write on YouTube (e.g. in English, prefer "beginner tutorial", "crash course", "complete guide", "step by step").${continuation}
 
-Responda APENAS um objeto JSON onde as chaves são os códigos de idioma (${languages.join(', ')}) e os valores são arrays com exatamente ${termsPerLanguage} strings. Não acrescente nenhum texto fora do JSON.`;
+Respond ONLY with a JSON object where the keys are the language codes (${languages.join(', ')}) and the values are arrays with exactly ${termsPerLanguage} strings. Do not add any text outside the JSON.`;
 }
 
-// Prompt Candidato V3: Refinado com orientação para keywords de busca, nichos e sem pontuação
+// Candidate prompt V3: refined with guidance on search keywords, niches and no punctuation
 function buildCandidatePromptV3(topic, languages, termsPerLanguage, continuation = '') {
-  return `Você é um especialista em SEO e busca de vídeos no YouTube.
-Converta o seguinte tema de pesquisa em termos de busca altamente otimizados para o YouTube.
+  return `You are an expert in SEO and YouTube video search.
+Convert the following research topic into highly optimized YouTube search terms.
 
-Tema informado: ${JSON.stringify(topic)}
-Idiomas requeridos: ${languages.join(', ')}
-Termos por idioma: ${termsPerLanguage}
+Given topic: ${JSON.stringify(topic)}
+Required languages: ${languages.join(', ')}
+Terms per language: ${termsPerLanguage}
 
-DIRETRIZES DE OTIMIZAÇÃO PARA O YOUTUBE:
-1. FOCO EM PALAVRAS-CHAVE: No YouTube, usuários pesquisam usando termos diretos (3 a 6 palavras) que combinam o assunto central com modificadores de alto valor (ex.: "tutorial", "curso completo", "passo a passo", "do zero", "guia pratico", ferramentas do nicho).
-2. REMOVA RUÍDO CONVERSACIONAL: Elimine frases em primeira pessoa ou perguntas conversacionais ("eu quero aprender a...", "como faço para...", "queria ver vídeos de..."). Extraia o assunto e a intenção técnica.
-3. PROIBIDO FORMATO DE ARTIGO/PAPER: Nunca use frases longas acadêmicas nem títulos de papers científicos (ex.: evite "LLM-powered software reverse engineering: tools, libraries, and models").
-4. ZERO PONTUAÇÃO: Não use dois pontos (:), travessão (- ou —), aspas, ponto final ou ponto e vírgula. Apenas palavras separadas por espaço.
-5. ÂNGULOS COMPLEMENTARES: Gere termos variados entre:
-   - Ângulo 1: Introdução / curso completo / tutorial iniciante do zero
-   - Ângulo 2: Aplicação prática / passo a passo / exemplos reais
-   - Ângulo 3: Ferramentas do nicho / técnicas intermediárias ou avançadas
-6. NATURALIDADE IDIOMÁTICA: Use termos como nativos daquele idioma pesquisam no YouTube (ex.: em inglês: "beginner tutorial", "full course", "hands on guide", "step by step"; em português: "curso completo", "tutorial iniciante", "passo a passo").${continuation}
+YOUTUBE OPTIMIZATION GUIDELINES:
+1. KEYWORD FOCUS: On YouTube, users search with direct terms (3 to 6 words) that combine the core subject with high-value modifiers (e.g. "tutorial", "full course", "step by step", "from scratch", "practical guide", niche tools).
+2. REMOVE CONVERSATIONAL NOISE: Remove first-person phrases or conversational questions ("I want to learn how to...", "how do I...", "I'd like to see videos of..."). Extract the subject and the technical intent.
+3. NO ARTICLE OR PAPER FORMAT: Never use long academic phrases or scientific paper titles (e.g. avoid "LLM-powered software reverse engineering: tools, libraries, and models").
+4. ZERO PUNCTUATION: Do not use colons (:), dashes (- or —), quotation marks, periods or semicolons. Only words separated by spaces.
+5. COMPLEMENTARY ANGLES: Generate varied terms across:
+   - Angle 1: Introduction / full course / beginner tutorial from scratch
+   - Angle 2: Practical application / step by step / real examples
+   - Angle 3: Niche tools / intermediate or advanced techniques
+6. IDIOMATIC NATURALNESS: Use terms the way native speakers of each language search on YouTube (e.g. in English: "beginner tutorial", "full course", "hands on guide", "step by step"; in Portuguese: "curso completo", "tutorial iniciante", "passo a passo").${continuation}
 
-Retorne EXCLUSIVAMENTE um objeto JSON válido no formato:
+Return EXCLUSIVELY a valid JSON object in this format:
 {
-  ${languages.map(l => `"${l}": ["termo 1", "termo 2"]`).join(',\n  ')}
+  ${languages.map(l => `"${l}": ["term 1", "term 2"]`).join(',\n  ')}
 }
-Sem blocos de markdown, sem explicações.`;
+No markdown blocks, no explanations.`;
 }
 
 async function callLlm(prompt) {
@@ -100,32 +101,32 @@ async function callLlm(prompt) {
   return JSON.parse(clean);
 }
 
-// Juiz LLM para avaliar a qualidade dos termos para o YouTube
+// LLM judge that scores the quality of the terms for YouTube
 async function judgeTerms(topic, baselineTerms, candidateTerms) {
-  const prompt = `Você é um avaliador crítico sênior especializado em SEO e algoritmos de busca do YouTube.
+  const prompt = `You are a senior critical evaluator specialized in SEO and YouTube search algorithms.
 
-Tema original fornecido pelo usuário: "${topic}"
+Original topic provided by the user: "${topic}"
 
-Conjunto A (Baseline atual):
+Set A (current baseline):
 ${JSON.stringify(baselineTerms, null, 2)}
 
-Conjunto B (Candidato Otimizado V3):
+Set B (optimized candidate V3):
 ${JSON.stringify(candidateTerms, null, 2)}
 
-Critérios de julgamento (0 a 10 para cada conjunto):
-1. Eficácia no YouTube: Os termos correspondem a termos de busca reais que espectadores usam e que retornam os melhores vídeos (em vez de frases acadêmicas longas com ":" ou papers)?
-2. Tratamento da intenção: Converteu expressões conversacionais ("eu quero aprender a...") em palavras-chave eficazes?
-3. Variabilidade de ângulos: Os termos cobrem ângulos complementares (iniciante, curso, ferramentas, prático) sem redundância?
-4. Linguagem e concisão: Termos concisos (3-6 palavras), sem pontuações ruins (: ; " etc.) e idiomáticos para cada idioma.
+Judging criteria (0 to 10 for each set):
+1. YouTube effectiveness: Do the terms match real search terms that viewers use and that return the best videos (rather than long academic phrases with ":" or paper titles)?
+2. Intent handling: Did it convert conversational expressions ("I want to learn how to...") into effective keywords?
+3. Angle variety: Do the terms cover complementary angles (beginner, course, tools, practical) without redundancy?
+4. Language and conciseness: Concise terms (3-6 words), no bad punctuation (: ; " etc.) and idiomatic for each language.
 
-Responda em formato JSON:
+Respond in JSON format:
 {
-  "scoreA": <número 0 a 10>,
-  "scoreB": <número 0 a 10>,
-  "critiqueA": "<breve análise do conjunto A>",
-  "critiqueB": "<breve análise do conjunto B>",
-  "winner": "A" ou "B",
-  "reason": "<por que o vencedor é melhor para o YouTube>"
+  "scoreA": <number 0 to 10>,
+  "scoreB": <number 0 to 10>,
+  "critiqueA": "<brief analysis of set A>",
+  "critiqueB": "<brief analysis of set B>",
+  "winner": "A" or "B",
+  "reason": "<why the winner is better for YouTube>"
 }`;
 
   const url = `${settings.llmBaseUrl.replace(/\/+$/, '')}/chat/completions`;
@@ -148,36 +149,36 @@ Responda em formato JSON:
 }
 
 async function runOptimization() {
-  console.log('=== INICIANDO TRABALHO DE PROMPT OPTIMIZATION PARA O YOUTUBE ===\n');
-  console.log(`Modelo: ${settings.expansionModel} (${settings.llmBaseUrl})\n`);
+  console.log('=== STARTING YOUTUBE PROMPT OPTIMIZATION ===\n');
+  console.log(`Model: ${settings.expansionModel} (${settings.llmBaseUrl})\n`);
 
   for (const testCase of TEST_CASES) {
     console.log(`\n------------------------------------------------------------`);
-    console.log(`TESTE: "${testCase.topic}" (${testCase.description})`);
-    console.log(`Idiomas: ${testCase.languages.join(', ')}`);
+    console.log(`TEST: "${testCase.topic}" (${testCase.description})`);
+    console.log(`Languages: ${testCase.languages.join(', ')}`);
     console.log(`------------------------------------------------------------`);
 
     const promptBase = buildBaselinePrompt(testCase.topic, testCase.languages, 3);
     const promptCand = buildCandidatePromptV3(testCase.topic, testCase.languages, 3);
 
-    console.log('Chamando LLM com prompt Baseline...');
+    console.log('Calling the LLM with the baseline prompt...');
     const resultBase = await callLlm(promptBase);
-    console.log('Baseline gerou:', JSON.stringify(resultBase, null, 2));
+    console.log('Baseline generated:', JSON.stringify(resultBase, null, 2));
 
-    console.log('\nChamando LLM com prompt Candidato V3...');
+    console.log('\nCalling the LLM with the V3 candidate prompt...');
     const resultCand = await callLlm(promptCand);
-    console.log('Candidato V3 gerou:', JSON.stringify(resultCand, null, 2));
+    console.log('V3 candidate generated:', JSON.stringify(resultCand, null, 2));
 
-    console.log('\nJuiz LLM avaliando os dois resultados...');
+    console.log('\nLLM judge evaluating both results...');
     const evaluation = await judgeTerms(testCase.topic, resultBase, resultCand);
-    console.log(`Vencedor: Conjunto ${evaluation.winner}`);
-    console.log(`Nota Baseline: ${evaluation.scoreA}/10 | Nota Candidato V2: ${evaluation.scoreB}/10`);
-    console.log(`Análise: ${evaluation.reason}`);
-    console.log(`Crítica Baseline: ${evaluation.critiqueA}`);
-    console.log(`Crítica Candidato: ${evaluation.critiqueB}`);
+    console.log(`Winner: Set ${evaluation.winner}`);
+    console.log(`Baseline score: ${evaluation.scoreA}/10 | Candidate V3 score: ${evaluation.scoreB}/10`);
+    console.log(`Analysis: ${evaluation.reason}`);
+    console.log(`Baseline critique: ${evaluation.critiqueA}`);
+    console.log(`Candidate critique: ${evaluation.critiqueB}`);
   }
 
-  console.log('\n=== PROMPT OPTIMIZATION CONCLUÍDO ===\n');
+  console.log('\n=== PROMPT OPTIMIZATION COMPLETE ===\n');
 }
 
 runOptimization().catch(console.error);

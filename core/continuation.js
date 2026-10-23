@@ -12,7 +12,7 @@ export function freshSearchTerms(terms, previousTerms, languages, perLanguage, f
 
 export function mergeDiscoveryResults(previous, batch) {
   if (!previous) return { ...batch, rounds: 1 };
-  if (previous.topic !== batch.topic) throw new Error('A continuação precisa usar o mesmo tema da pesquisa.');
+  if (previous.topic !== batch.topic) throw new Error('Continuation must use the same search topic.');
   const byId = new Map(previous.videos.map(video => [video.id, video]));
   for (const video of batch.videos) if (!byId.has(video.id)) byId.set(video.id, video);
   const terms = [];

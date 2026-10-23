@@ -119,6 +119,6 @@ export function isNotebookSite(input) {
 }
 
 export function videoUrl(id) {
-  if (!/^[a-zA-Z0-9_-]{11}$/.test(id)) throw new Error('ID de vídeo inválido');
+  if (!/^[a-zA-Z0-9_-]{11}$/.test(id)) throw new Error('Invalid video ID');
   return `https://www.youtube.com/watch?v=${id}`;
 }

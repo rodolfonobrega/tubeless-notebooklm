@@ -32,7 +32,7 @@ const player = (videoId = id, overrides = {}) => ({
   ...overrides
 });
 
-test('busca pública extrai resultados reais, ignora publicidade e aceita credenciais e redirecionamento', async () => {
+test('public search extracts real results, ignores ads, and accepts credentials and redirects', async () => {
   let requested;
   const results = await searchYouTubeWeb(term, { ...settings, resultsPerTerm: 1 }, async (url, options) => {
     requested = { url: new URL(url), options };
@@ -49,7 +49,7 @@ test('busca pública extrai resultados reais, ignora publicidade e aceita creden
   assert.deepEqual(results, [{ id, title: 'Solar "{energia}"', description: 'Como funciona', channel: 'TED-Ed', publishedAt: '', thumbnail: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`, foundBy: 'energia solar', duration: 'PT4M59S', captionAvailable: true }]);
 });
 
-test('busca aceita lockup moderno e Shorts, sem confundir playlists ou buscar URLs externas', () => {
+test('search accepts modern lockups and Shorts without confusing playlists or external URLs', () => {
   const page = searchPage([
     { lockupViewModel: {
       contentId: otherId, contentType: 'LOCKUP_CONTENT_TYPE_VIDEO',
@@ -74,7 +74,7 @@ test('busca aceita lockup moderno e Shorts, sem confundir playlists ou buscar UR
   assert.equal(results[0].thumbnail, `https://i.ytimg.com/vi/${otherId}/mqdefault.jpg`);
 });
 
-test('player fornece descrição completa, legendas automáticas e data exata sem executar HTML', () => {
+test('player provides full description, automatic captions, and exact date without running HTML', () => {
   globalThis.__youtubeExecuted = false;
   const page = `<script>globalThis.__youtubeExecuted = true;</script>` + html('ytInitialPlayerResponse', player());
   const result = parseYouTubeWatchHtml(page, video);
@@ -90,7 +90,7 @@ test('player fornece descrição completa, legendas automáticas e data exata se
   assert.deepEqual(result.foundBy, ['energia solar']);
 });
 
-test('enriquecimento remove vídeos sem legendas ou indisponíveis e mantém descrição sem legenda quando permitido', async () => {
+test('enrichment removes videos without captions or unavailable ones, and keeps descriptions without captions when allowed', async () => {
   const noCaptions = html('ytInitialPlayerResponse', player(id, { captions: undefined }));
   const unavailable = html('ytInitialPlayerResponse', player(otherId, { playabilityStatus: { status: 'UNPLAYABLE', reason: 'Video unavailable' }, videoDetails: undefined }));
   const fetchPage = async url => response(new URL(url).searchParams.get('v') === id ? noCaptions : unavailable);
@@ -100,57 +100,57 @@ test('enriquecimento remove vídeos sem legendas ou indisponíveis e mantém des
   assert.equal(retained[0].captionAvailable, false);
 });
 
-test('falha parcial do YouTube mantém sucessos e expõe bloqueio para o chamador', async () => {
+test('partial YouTube failure keeps successes and exposes the block to the caller', async () => {
   const results = await enrichYouTubeWeb([video, { ...video, id: otherId }], settings, async url => {
     return response(new URL(url).searchParams.get('v') === id ? html('ytInitialPlayerResponse', player()) : '<html><title>Before you continue to YouTube</title><form action="https://consent.youtube.com/save"></form></html>');
   });
   assert.equal(results[0].description, 'Descrição completa\nCom {chaves} e "aspas".');
-  assert.match(results[1].detailError, /consentimento/i);
+  assert.match(results[1].detailError, /consent/i);
   assert.equal(results[1].captionAvailable, undefined);
   assert.equal(results[1].playabilityStatus, 'UNKNOWN');
 });
 
-test('página de consentimento, robô, HTTP 429 e layout desconhecido falham explicitamente', async () => {
+test('consent page, bot check, HTTP 429, and unknown layout fail explicitly', async () => {
   for (const body of ['<title>Before you continue to YouTube</title>', '<html><div>Our systems have detected unusual traffic</div></html>', html('ytInitialData', { arbitrary: {} })]) {
     await assert.rejects(searchYouTubeWeb(term, settings, async () => response(body)), /YouTube/i);
   }
   await assert.rejects(searchYouTubeWeb(term, settings, async () => response('Too many requests', 429)), /429/);
-  assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', player(id, { playabilityStatus: { status: 'LOGIN_REQUIRED', reason: "Sign in to confirm you're not a bot" } })), video), /bloqueio|robô/i);
+  assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', player(id, { playabilityStatus: { status: 'LOGIN_REQUIRED', reason: "Sign in to confirm you're not a bot" } })), video), /blocked|bot/i);
 });
 
-test('busca só devolve vazio quando o YouTube fornece seção vazia ou mensagem de nenhum resultado', () => {
+test('search returns empty only when YouTube gives an empty section or a no-results message', () => {
   assert.deepEqual(parseYouTubeSearchHtml(searchPage([]), term, settings), []);
   assert.deepEqual(parseYouTubeSearchHtml(searchPage([{ messageRenderer: { text: { simpleText: 'Nenhum resultado encontrado' } } }]), term, settings), []);
-  assert.throws(() => parseYouTubeSearchHtml(searchPage([{ newUnknownRenderer: { value: 'changed schema' } }]), term, settings), /formato|layout|interpretar/i);
+  assert.throws(() => parseYouTubeSearchHtml(searchPage([{ newUnknownRenderer: { value: 'changed schema' } }]), term, settings), /format|layout|could not parse/i);
 });
 
-test('JSON parse seguro aceita atribuições usuais e rejeita expressão, truncamento e profundidade excessiva', () => {
+test('safe JSON parse accepts usual assignments and rejects expressions, truncation, and excessive depth', () => {
   const raw = JSON.stringify({ contents: { twoColumnSearchResultsRenderer: { primaryContents: { sectionListRenderer: { contents: [{ itemSectionRenderer: { contents: [legacy()] } }] } } } } });
   for (const assignment of [`var ytInitialData = ${raw};`, `ytInitialData=${raw};`, `window['ytInitialData'] = ${raw};`, `ytInitialData = JSON.parse(${JSON.stringify(raw)});`]) {
     assert.equal(parseYouTubeSearchHtml(`<script>${assignment}</script>`, term, settings)[0].id, id);
   }
-  assert.throws(() => parseYouTubeSearchHtml('<script>ytInitialData = (() => { return {} })();</script>', term, settings), /JSON|dados/i);
-  assert.throws(() => parseYouTubeSearchHtml('<script>ytInitialData = {"contents":{}</script>', term, settings), /JSON|dados/i);
+  assert.throws(() => parseYouTubeSearchHtml('<script>ytInitialData = (() => { return {} })();</script>', term, settings), /JSON|data/i);
+  assert.throws(() => parseYouTubeSearchHtml('<script>ytInitialData = {"contents":{}</script>', term, settings), /JSON|data/i);
   const deep = '{"next":'.repeat(150) + '{}' + '}'.repeat(150);
-  assert.throws(() => parseYouTubeSearchHtml(`<script>ytInitialData=${deep};</script>`, term, settings), /limite|profundidade/i);
+  assert.throws(() => parseYouTubeSearchHtml(`<script>ytInitialData=${deep};</script>`, term, settings), /limit|depth/i);
 });
 
-test('player com outro ID e player sem metadados não confirma vídeos por acidente', () => {
-  assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', player(otherId)), video), /ID|identidade/i);
-  assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', { playabilityStatus: { status: 'OK' } }), video), /metadados|dados/i);
-  assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', player(id, { videoDetails: { videoId: id, title: 'Título apenas' } })), video), /descrição|metadados/i);
+test('player with another ID or without metadata does not confirm videos by accident', () => {
+  assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', player(otherId)), video), /ID|identity/i);
+  assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', { playabilityStatus: { status: 'OK' } }), video), /metadata|data/i);
+  assert.throws(() => parseYouTubeWatchHtml(html('ytInitialPlayerResponse', player(id, { videoDetails: { videoId: id, title: 'Título apenas' } })), video), /description|metadata/i);
 });
 
-test('requisição recusa corpos enormes antes da leitura e também durante streaming', async () => {
+test('request refuses huge bodies before reading and also during streaming', async () => {
   const advertised = new Response('small', { headers: { 'Content-Length': '9000000' } });
-  await assert.rejects(searchYouTubeWeb(term, settings, async () => advertised), /limite|grande/i);
+  await assert.rejects(searchYouTubeWeb(term, settings, async () => advertised), /limit/i);
   let cancelled = false;
   const stream = new ReadableStream({ start(controller) { controller.enqueue(new Uint8Array(8500000)); }, cancel() { cancelled = true; } });
-  await assert.rejects(searchYouTubeWeb(term, settings, async () => new Response(stream)), /limite|grande/i);
+  await assert.rejects(searchYouTubeWeb(term, settings, async () => new Response(stream)), /limit/i);
   assert.equal(cancelled, true);
 });
 
-test('enriquecimento limita simultaneidade e preserva a ordem ao receber respostas fora de ordem', async () => {
+test('enrichment limits concurrency and keeps order when responses arrive out of order', async () => {
   const ids = [id, otherId, 'def12345678', 'ghi12345678', 'jkl12345678'];
   let active = 0;
   let highest = 0;
@@ -167,7 +167,7 @@ test('enriquecimento limita simultaneidade e preserva a ordem ao receber respost
   assert.deepEqual(result.map(v => v.id), ids);
 });
 
-test('redirecionamento para domínio seguro do YouTube ou consentimento é aceito', async () => {
+test('redirect to a safe YouTube domain or consent is accepted', async () => {
   const redirectedResponse = new Response(searchPage([legacy()]), { status: 200, headers: { 'Content-Type': 'text/html' } });
   Object.defineProperty(redirectedResponse, 'url', { value: 'https://youtube.com/results?search_query=energia+solar' });
   const results = await searchYouTubeWeb(term, { ...settings, resultsPerTerm: 1 }, async () => redirectedResponse);
@@ -175,13 +175,13 @@ test('redirecionamento para domínio seguro do YouTube ou consentimento é aceit
   assert.equal(results[0].id, id);
 });
 
-test('redirecionamento fora do YouTube ou Google é bloqueado por segurança', async () => {
+test('redirect outside YouTube or Google is blocked for safety', async () => {
   const evilResponse = new Response(searchPage([legacy()]), { status: 200, headers: { 'Content-Type': 'text/html' } });
   Object.defineProperty(evilResponse, 'url', { value: 'https://evil-site.com/results' });
-  await assert.rejects(searchYouTubeWeb(term, settings, async () => evilResponse), /redirecionamento fora do YouTube bloqueado/i);
+  await assert.rejects(searchYouTubeWeb(term, settings, async () => evilResponse), /redirect outside YouTube blocked/i);
 });
 
-test('cancelamento interrompe antes de buscar e é propagado durante enriquecimento', async () => {
+test('cancellation stops before searching and propagates during enrichment', async () => {
   const controller = new AbortController();
   controller.abort();
   let calls = 0;

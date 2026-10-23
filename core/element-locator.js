@@ -11,14 +11,14 @@ const text = (value, max = 140) => String(value || '').replace(/\s+/g, ' ').trim
   .replace(/\b(?:sk|gsk)-[A-Za-z0-9_-]{8,}/g, '[redacted]');
 
 export function sanitizeCandidates(action, input) {
-  if (!LOCATOR_ACTIONS[action] || !Array.isArray(input) || !input.length || input.length > 60) throw new Error('Lista de controles inválida.');
+  if (!LOCATOR_ACTIONS[action] || !Array.isArray(input) || !input.length || input.length > 60) throw new Error('Invalid control list.');
   const seen = new Set();
   return input.map(candidate => {
     const id = text(candidate?.id, 12);
-    if (!/^e\d{1,3}$/.test(id) || seen.has(id)) throw new Error('Identificador de controle inválido.');
+    if (!/^e\d{1,3}$/.test(id) || seen.has(id)) throw new Error('Invalid control identifier.');
     seen.add(id);
     const kind = candidate?.kind === 'field' ? 'field' : candidate?.kind === 'button' ? 'button' : '';
-    if ((action === 'url') !== (kind === 'field') || !kind) throw new Error('Tipo de controle inválido.');
+    if ((action === 'url') !== (kind === 'field') || !kind) throw new Error('Invalid control type.');
     return { id, kind, tag: text(candidate.tag, 30), role: text(candidate.role, 30), label: text(candidate.label), placeholder: text(candidate.placeholder), formControlName: text(candidate.formControlName, 60) };
   });
 }
@@ -44,7 +44,7 @@ export function buildElementDecision(action, candidates, model) {
 export function readElementDecision(data, candidates) {
   const answer = data?.answers?.target;
   if (answer?.type !== 'choice' || !candidates.some(candidate => candidate.id === answer.choice) || typeof answer.confidence !== 'number' || !Number.isFinite(answer.confidence) || answer.confidence < 0.7 || answer.confidence > 1) {
-    throw new Error('Não foi possível identificar o controle com segurança. Abra a janela de adicionar YouTube no notebook e tente novamente.');
+    throw new Error('Could not identify the control with confidence. Open the add-YouTube dialog in the notebook and try again.');
   }
   return answer.choice;
 }
@@ -58,9 +58,9 @@ export function validNotebookSender(sender, extensionId) {
 }
 
 export function sanitizeLocatorDescriptor(input) {
-  if (!input || typeof input !== 'object' || !/^[a-z][a-z0-9-]{0,29}$/.test(input.tag || '')) throw new Error('Controle salvo inválido.');
+  if (!input || typeof input !== 'object' || !/^[a-z][a-z0-9-]{0,29}$/.test(input.tag || '')) throw new Error('Invalid saved control.');
   const descriptor = { tag: input.tag, kind: input.kind === 'field' ? 'field' : 'button' };
   for (const key of ['role', 'label', 'ariaLabel', 'placeholder', 'formControlName', 'testId', 'name']) descriptor[key] = text(input[key], key === 'label' || key === 'ariaLabel' || key === 'placeholder' ? 140 : 80);
-  if (!descriptor.label && !descriptor.ariaLabel && !descriptor.formControlName && !descriptor.placeholder && !descriptor.testId && !descriptor.name) throw new Error('Controle sem identificação estável.');
+  if (!descriptor.label && !descriptor.ariaLabel && !descriptor.formControlName && !descriptor.placeholder && !descriptor.testId && !descriptor.name) throw new Error('Control has no stable identifier.');
   return descriptor;
 }

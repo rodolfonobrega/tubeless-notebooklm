@@ -2,7 +2,7 @@ import { parseNotebookUrl } from './search.js';
 
 export function buildImportQueue(topic, videos, notebookUrl, previous = null) {
   const canonical = parseNotebookUrl(notebookUrl);
-  if (!canonical) throw new Error('Destino de notebook inválido.');
+  if (!canonical) throw new Error('Invalid notebook destination.');
   const ids = videos.map(video => video.id);
   const same = previous?.topic === topic && parseNotebookUrl(previous?.notebookUrl) === canonical && JSON.stringify(previous?.ids) === JSON.stringify(ids);
   return {
@@ -19,11 +19,11 @@ export function findNotebookTab(tabs, queue) {
 }
 
 export function recordImportOutcome(queue, id, response) {
-  if (!queue.ids.includes(id)) throw new Error('Vídeo fora da fila.');
+  if (!queue.ids.includes(id)) throw new Error('Video is not in the queue.');
   const completed = queue.completed.filter(item => item !== id);
   const failures = queue.failures.filter(item => item.id !== id);
   if (response?.status === 'imported' || response?.status === 'duplicate') completed.push(id);
-  else failures.push({ id, status: response?.status || 'error', ...(response?.reason === 'layout' ? { reason: 'layout' } : {}), message: response?.message || 'Sem confirmação' });
+  else failures.push({ id, status: response?.status || 'error', ...(response?.reason === 'layout' ? { reason: 'layout' } : {}), message: response?.message || 'No confirmation' });
   return { ...queue, completed, failures };
 }
 
@@ -33,7 +33,7 @@ export function recordBatchImportOutcome(queue, response) {
     const matches = response?.status === 'batch' && Array.isArray(response.outcomes) ? response.outcomes.filter(item => item?.id === id) : [];
     const outcome = matches.length === 1 && ['imported', 'duplicate', 'uncertain', 'error'].includes(matches[0].status)
       ? matches[0]
-      : response?.status === 'error' ? response : { status: 'uncertain', message: response?.message || 'O notebook não confirmou este item do lote. Verifique antes de repetir.' };
+      : response?.status === 'error' ? response : { status: 'uncertain', message: response?.message || 'The notebook did not confirm this batch item. Check before retrying.' };
     updated = recordImportOutcome(updated, id, outcome);
   }
   return updated;
@@ -44,7 +44,7 @@ export function shouldPauseImport(response) {
 }
 
 export function markImportConfirmed(queue, id) {
-  if (!queue.failures.some(item => item.id === id && item.status === 'uncertain')) throw new Error('A fonte não está aguardando confirmação manual.');
+  if (!queue.failures.some(item => item.id === id && item.status === 'uncertain')) throw new Error('The source is not waiting for manual confirmation.');
   return {
     ...queue,
     completed: [...new Set([...queue.completed, id])],

@@ -69,7 +69,7 @@ function renderHistory() {
   const list = $('historyList');
   list.replaceChildren();
   if (!count) {
-    list.append(element('div', 'empty-results', 'Nenhuma busca salva no histórico.'));
+    list.append(element('div', 'empty-results', 'No saved searches in history.'));
     return;
   }
   state.history.forEach(entry => {
@@ -78,18 +78,18 @@ function renderHistory() {
     const topic = element('div', 'history-topic', entry.topic);
     topic.title = entry.topic;
     const approvedCount = entry.videos.filter(v => v.status === 'approved').length;
-    const meta = element('div', 'history-meta', `${entry.dateFormatted} · ${approvedCount} relevantes de ${entry.videos.length} vídeos`);
+    const meta = element('div', 'history-meta', `${entry.dateFormatted} · ${approvedCount} relevant of ${entry.videos.length} videos`);
     info.append(topic, meta);
 
     const actions = element('div', 'history-actions');
-    const openBtn = element('button', 'secondary-button', 'Abrir');
+    const openBtn = element('button', 'secondary-button', 'Open');
     openBtn.type = 'button';
-    openBtn.title = 'Carregar esta pesquisa na tela';
+    openBtn.title = 'Load this search on screen';
     openBtn.addEventListener('click', () => loadFromHistory(entry.id));
 
     const delBtn = element('button', 'text-button history-delete', '✕');
     delBtn.type = 'button';
-    delBtn.title = 'Excluir esta busca';
+    delBtn.title = 'Delete this search';
     delBtn.addEventListener('click', () => deleteFromHistory(entry.id));
 
     actions.append(openBtn, delBtn);
@@ -102,7 +102,7 @@ async function loadFromHistory(id) {
   const entry = findHistoryEntry(state.history, id);
   if (!entry) return;
   if (state.controller || state.importing || state.reviewing) {
-    showMessage('Conclua a operação em andamento antes de carregar outra busca.');
+    showMessage('Finish the current operation before loading another search.');
     return;
   }
   state.result = {
@@ -122,7 +122,7 @@ async function loadFromHistory(id) {
   $('historyToggle').setAttribute('aria-expanded', 'false');
   await chrome.storage.local.set({ lastSearch: state.result, selectedVideoIds: [...state.selected] });
   renderResults();
-  showMessage(`Busca "${entry.topic}" carregada do histórico.`, true);
+  showMessage(`Search "${entry.topic}" loaded from history.`, true);
 }
 
 async function deleteFromHistory(id) {
@@ -130,7 +130,7 @@ async function deleteFromHistory(id) {
   await persistHistory();
   renderHistory();
   renderResults();
-  showMessage('Busca removida do histórico.', true);
+  showMessage('Search removed from history.', true);
 }
 
 async function clearAllHistory() {
@@ -139,7 +139,7 @@ async function clearAllHistory() {
   await persistHistory();
   renderHistory();
   renderResults();
-  showMessage('Histórico de buscas limpo.', true);
+  showMessage('Search history cleared.', true);
 }
 
 async function saveCurrentSearchToHistory() {
@@ -149,14 +149,14 @@ async function saveCurrentSearchToHistory() {
   await persistHistory();
   renderHistory();
   renderResults();
-  showMessage(`Busca "${entry.topic}" salva no histórico!`, true);
+  showMessage(`Search "${entry.topic}" saved to history!`, true);
 }
 
 function setView(name) {
   $('researchView').classList.toggle('hidden', name !== 'research');
   $('settingsView').classList.toggle('hidden', name !== 'settings');
   $('importDock').classList.toggle('hidden', name !== 'research' || state.selected.size === 0);
-  $('settingsToggle').setAttribute('aria-label', name === 'settings' ? 'Voltar à pesquisa' : 'Abrir configurações');
+  $('settingsToggle').setAttribute('aria-label', name === 'settings' ? 'Back to search' : 'Open settings');
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
@@ -173,10 +173,10 @@ function showSettingsError(message) {
 }
 
 function showProgress({ phase, completed, total }) {
-  const titles = { expanding: 'Preparando a pesquisa', searching: 'Pesquisando vídeos', details: 'Lendo detalhes dos vídeos', evaluating: 'Avaliando vídeos', done: 'Pesquisa concluída' };
+  const titles = { expanding: 'Preparing the search', searching: 'Searching videos', details: 'Reading video details', evaluating: 'Evaluating videos', done: 'Search complete' };
   $('statusBox').classList.remove('hidden');
-  $('statusTitle').textContent = titles[phase] || 'Trabalhando';
-  $('statusDetail').textContent = phase === 'expanding' ? 'Variando termos por idioma…' : `${completed} de ${total}`;
+  $('statusTitle').textContent = titles[phase] || 'Working';
+  $('statusDetail').textContent = phase === 'expanding' ? 'Varying terms by language…' : `${completed} of ${total}`;
   $('progressBar').style.width = `${total ? Math.round(completed / total * 100) : 10}%`;
 }
 
@@ -224,7 +224,7 @@ function renderVideo(video) {
   image.loading = 'lazy';
   const info = element('div', 'video-info');
   const title = element('h3', '', video.title);
-  const date = video.publishedAt ? new Date(video.publishedAt).toLocaleDateString('pt-BR') : '';
+  const date = video.publishedAt ? new Date(video.publishedAt).toLocaleDateString('en-US') : '';
   info.append(title, element('div', 'video-meta', [video.channel, date].filter(Boolean).join(' • ')));
   top.append(image, info);
   const bottom = element('div', 'video-bottom');
@@ -232,18 +232,18 @@ function renderVideo(video) {
   checkbox.type = 'checkbox';
   checkbox.checked = state.selected.has(video.id);
   checkbox.disabled = Boolean(state.importQueue) || state.importing || Boolean(state.controller);
-  checkbox.setAttribute('aria-label', `Selecionar ${video.title}`);
+  checkbox.setAttribute('aria-label', `Select ${video.title}`);
   checkbox.addEventListener('change', () => {
     if (checkbox.checked) state.selected.add(video.id); else state.selected.delete(video.id);
     card.classList.toggle('selected', checkbox.checked);
     updateDock();
     persistSelection().catch(error => showMessage(error.message));
   });
-  const status = video.status === 'error' ? 'Sem avaliação' : `${Math.round(video.probability * 100)}% relevante`;
+  const status = video.status === 'error' ? 'Not evaluated' : `${Math.round(video.probability * 100)}% relevant`;
   const pill = element('span', `score-pill ${video.status}`, status);
-  const evidence = element('span', 'evidence', video.evaluationError || (video.transcript ? 'Com transcrição' : 'Informações do vídeo'));
+  const evidence = element('span', 'evidence', video.evaluationError || (video.transcript ? 'With transcript' : 'Video details'));
   evidence.title = evidence.textContent;
-  const link = element('a', '', 'Assistir ↗');
+  const link = element('a', '', 'Watch ↗');
   link.href = videoUrl(video.id);
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
@@ -260,19 +260,19 @@ function renderResults() {
     saveBtn.classList.toggle('hidden', !result);
     if (result) {
       const saved = isCurrentSearchSaved();
-      saveBtn.textContent = saved ? 'Salva no histórico ✓' : 'Salvar busca';
+      saveBtn.textContent = saved ? 'Saved to history ✓' : 'Save search';
       saveBtn.disabled = saved;
     }
   }
   if (!result) { updateDock(); return; }
   $('resultTitle').textContent = result.topic;
   const approved = result.videos.filter(v => v.status === 'approved').length;
-  $('resultSummary').textContent = `${approved} relevantes · ${result.videos.length} avaliados · ${result.discoveredCount} encontrados`;
+  $('resultSummary').textContent = `${approved} relevant · ${result.videos.length} evaluated · ${result.discoveredCount} found`;
   renderTerms(result.terms);
   const list = $('videoList');
   list.replaceChildren();
   const videos = sortVideosByRelevance(state.filter === 'approved' ? result.videos.filter(v => v.status === 'approved') : result.videos);
-  if (!videos.length) list.append(element('div', 'empty-results', state.filter === 'approved' ? 'Nenhum vídeo atingiu a relevância mínima. Veja todos os resultados ou ajuste a pesquisa.' : 'Nenhum vídeo para mostrar.'));
+  if (!videos.length) list.append(element('div', 'empty-results', state.filter === 'approved' ? 'No videos reached the minimum relevance. Check all results or adjust the search.' : 'No videos to show.'));
   else videos.forEach(video => list.append(renderVideo(video)));
   const warningBox = $('warnings');
   warningBox.replaceChildren(...result.warnings.map(warning => element('div', '', warning)));
@@ -288,9 +288,9 @@ function updatePendingNotice() {
   $('pendingNotice').classList.toggle('hidden', !queue);
   if (queue) $('pendingDetail').textContent = state.result?.topic === queue.topic
     ? uncertain
-      ? `${queue.completed.length}/${queue.ids.length} confirmadas · destino: ${queue.notebookUrl.split('/').at(-1)}. Fonte a revisar: “${reviewTitle}”. Confira se já entrou e marque-a como presente ou libere nova tentativa. ${queue.failures.filter(item => item.status === 'uncertain').length} item(ns) aguardando revisão.`
-      : `${queue.completed.length}/${queue.ids.length} confirmadas · destino: ${queue.notebookUrl.split('/').at(-1)}. Termine ou descarte antes de outra busca.`
-    : 'Os resultados originais não estão disponíveis. Descarte esta fila para iniciar outra busca.';
+      ? `${queue.completed.length}/${queue.ids.length} confirmed · destination: ${queue.notebookUrl.split('/').at(-1)}. Source to review: “${reviewTitle}”. Check whether it is already in and mark it as present or allow a new attempt. ${queue.failures.filter(item => item.status === 'uncertain').length} item(s) waiting for review.`
+      : `${queue.completed.length}/${queue.ids.length} confirmed · destination: ${queue.notebookUrl.split('/').at(-1)}. Finish or discard before starting another search.`
+    : 'The original results are not available. Discard this queue to start another search.';
   $('pendingResume').disabled = !queue || Boolean(uncertain) || state.result?.topic !== queue.topic || state.importing || state.reviewing;
   $('pendingConfirm').classList.toggle('hidden', !uncertain);
   $('pendingRetry').classList.toggle('hidden', !uncertain);
@@ -327,28 +327,28 @@ async function pingTab(tabId) {
 
 async function ensureTabReady(tabId) {
   if (await pingTab(tabId)) return true;
-  // Abas abertas antes da extensão carregar não recebem o content script automaticamente.
+  // Tabs opened before the extension loaded do not receive the content script automatically.
   try { await chrome.scripting.executeScript({ target: { tabId }, files: ['content/notebook.js'] }); }
-  catch { /* aba ainda carregando ou sem permissão; as tentativas abaixo decidem */ }
+  catch { /* Tab still loading or without permission; the attempts below decide. */ }
   for (let attempt = 0; attempt < 8; attempt++) {
     if (await pingTab(tabId)) return true;
     await wait(300);
   }
-  throw new Error('Não foi possível conectar à aba do NotebookLM. Recarregue a página do notebook (F5) e tente novamente.');
+  throw new Error('Could not connect to the NotebookLM tab. Reload the notebook page (F5) and try again.');
 }
 
 async function targetTab() {
   const allTabs = await chrome.tabs.query({});
 
-  // 1. Se há uma fila de importação pendente, continuar no mesmo notebook
+  // 1. If there is a pending import queue, continue in the same notebook
   if (state.importQueue) {
     const tab = findNotebookTab(allTabs, state.importQueue);
-    if (!tab) throw new Error('O notebook original da importação pendente não está aberto. Abra-o no Chrome para continuar ou descarte a fila pendente.');
+    if (!tab) throw new Error('The original notebook of the pending import is not open. Open it in Chrome to continue, or discard the pending queue.');
     await ensureTabReady(tab.id);
     return tab;
   }
 
-  // 2. Prioridade 1: Aba ativa na janela em foco (onde o usuário está navegando ao lado do painel lateral)
+  // 2. Priority 1: Active tab in the focused window (where the user is browsing next to the side panel)
   const activeTabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
   const activeTab = activeTabs[0];
   if (activeTab && parseNotebookUrl(activeTab.url)) {
@@ -356,7 +356,7 @@ async function targetTab() {
     return activeTab;
   }
 
-  // 3. Prioridade 2: Qualquer aba aberta que esteja em um caderno (/notebook/ID)
+  // 3. Priority 2: Any open tab that is on a notebook (/notebook/ID)
   const projectTabs = allTabs.filter(tab => parseNotebookUrl(tab.url));
   if (projectTabs.length > 0) {
     const chosen = projectTabs.find(t => t.windowId === activeTab?.windowId) || projectTabs[0];
@@ -365,16 +365,16 @@ async function targetTab() {
     return chosen;
   }
 
-  // 4. Prioridade 3: Se há aba no site do NotebookLM, mas ainda na home (sem caderno aberto)
+  // 4. Priority 3: If there is a NotebookLM site tab, but still on the home page (no notebook open)
   const siteTab = allTabs.find(tab => isNotebookSite(tab.url));
   if (siteTab) {
     await chrome.tabs.update(siteTab.id, { active: true }).catch(() => {});
     if (siteTab.windowId) await chrome.windows.update(siteTab.windowId, { focused: true }).catch(() => {});
-    throw new Error('Você está no NotebookLM, mas nenhum caderno está aberto. Abra o projeto desejado para adicionar as fontes.');
+    throw new Error('You are on NotebookLM, but no notebook is open. Open the project you want to add the sources to.');
   }
 
-  // 5. Nenhuma aba do NotebookLM encontrada
-  throw new Error('Nenhuma aba do NotebookLM está aberta no Chrome. Clique em "Abrir NotebookLM" para entrar.');
+  // 5. No NotebookLM tab found
+  throw new Error('No NotebookLM tab is open in Chrome. Click "Open NotebookLM" to sign in.');
 }
 
 async function sendToNotebook(tabId, videos, notebookUrl) {
@@ -390,13 +390,13 @@ async function sendToNotebook(tabId, videos, notebookUrl) {
       await wait(800);
     }
   }
-  throw new Error('Não foi possível conectar à aba do NotebookLM. Recarregue a página do notebook e tente novamente.');
+  throw new Error('Could not connect to the NotebookLM tab. Reload the notebook page and try again.');
 }
 
 async function importSelected() {
   if (state.importing || state.reviewing || !state.result || !state.selected.size) return;
-  if (!queueResultsAvailable()) { showMessage('Os resultados da fila pendente não estão disponíveis. Descarte a fila antes de adicionar outras fontes.'); return; }
-  if (state.importQueue?.failures.some(item => item.status === 'uncertain')) { showMessage('Revise as fontes sem confirmação antes de retomar a importação.'); return; }
+  if (!queueResultsAvailable()) { showMessage('The pending queue results are not available. Discard the queue before adding other sources.'); return; }
+  if (state.importQueue?.failures.some(item => item.status === 'uncertain')) { showMessage('Review the unconfirmed sources before resuming the import.'); return; }
   state.importing = true;
   renderResults();
   $('importButton').disabled = true;
@@ -405,18 +405,18 @@ async function importSelected() {
   try {
     const tab = await targetTab();
     const videos = state.result.videos.filter(video => state.selected.has(video.id));
-    if (!videos.length) throw new Error('Selecione pelo menos um vídeo.');
+    if (!videos.length) throw new Error('Select at least one video.');
     let queue = buildImportQueue(state.result.topic, videos, tab.url, state.importQueue);
     state.importQueue = queue;
     const additions = videos.filter(video => !queue.completed.includes(video.id));
     if (additions.length) {
-      queue = recordBatchImportOutcome(queue, { status: 'uncertain', message: 'O envio deste lote ainda não foi confirmado. Confira esta fonte no notebook antes de repetir.' });
+      queue = recordBatchImportOutcome(queue, { status: 'uncertain', message: 'The send of this batch is not confirmed yet. Check this source in the notebook before retrying.' });
       state.importQueue = queue;
       await chrome.storage.local.set({ importQueue: queue });
-      $('importProgress').textContent = `Adicionando ${additions.length} link(s) em um único envio. Aguardando confirmação das fontes…`;
+      $('importProgress').textContent = `Adding ${additions.length} link(s) in a single send. Waiting for the sources to be confirmed…`;
       let response;
       try { response = await sendToNotebook(tab.id, additions, queue.notebookUrl); }
-      catch (error) { response = { status: 'uncertain', message: `${error.message} Verifique o notebook antes de repetir o lote.` }; }
+      catch (error) { response = { status: 'uncertain', message: `${error.message} Check the notebook before retrying the batch.` }; }
       queue = recordBatchImportOutcome(queue, response);
       state.importQueue = queue;
       await chrome.storage.local.set({ importQueue: queue });
@@ -424,12 +424,12 @@ async function importSelected() {
     const paused = queue.failures.some(shouldPauseImport);
     const count = queue.completed.length;
     const failed = queue.failures.length;
-    $('importProgress').textContent = `${count} fonte(s) confirmada(s).${failed ? ` ${failed} exigem revisão.` : ''}`;
+    $('importProgress').textContent = `${count} source(s) confirmed.${failed ? ` ${failed} need review.` : ''}`;
     const failureMessages = [...new Set(queue.failures.map(item => item.message).filter(Boolean))].slice(0, 3).join(' | ');
     const layoutFailure = queue.failures.some(item => item.reason === 'layout');
     showMessage(paused
-      ? layoutFailure ? `Importação pausada porque não foi possível localizar um controle do notebook. ${failureMessages} Reabra o notebook e retome a fila.` : `${count} fonte(s) confirmada(s). ${failed} item(ns) do lote exigem revisão no notebook antes de repetir.`
-      : failed ? `${failed} vídeo(s) não foram confirmados no notebook. ${failureMessages}` : `${count} fonte(s) confirmada(s) no NotebookLM.`, !failed);
+      ? layoutFailure ? `Import paused because a notebook control could not be found. ${failureMessages} Reopen the notebook and resume the queue.` : `${count} source(s) confirmed. ${failed} item(s) in the batch need review in the notebook before retrying.`
+      : failed ? `${failed} video(s) were not confirmed in the notebook. ${failureMessages}` : `${count} source(s) confirmed in NotebookLM.`, !failed);
     if (!failed) { state.selected.clear(); state.importQueue = null; await chrome.storage.local.remove('importQueue'); await persistSelection(); renderResults(); }
     else { updatePendingNotice(); renderResults(); }
   } catch (error) {
@@ -444,12 +444,12 @@ async function importSelected() {
 async function startSearch(event, continuing = false) {
   event?.preventDefault();
   if (state.controller || state.importing || state.reviewing) return;
-  if (state.importQueue) { showMessage('Finalize ou descarte a importação pendente antes de iniciar outra pesquisa.'); return; }
+  if (state.importQueue) { showMessage('Finish or discard the pending import before starting another search.'); return; }
   const previous = continuing ? state.result : null;
   if (continuing && !previous) return;
   const topic = continuing ? previous.topic : $('topic').value.trim();
-  if (!topic) { showMessage('Informe um tema antes de pesquisar.'); return; }
-  if (!connectionsReady()) { showMessage('Configure as conexões de busca e avaliação para começar.'); setView('settings'); return; }
+  if (!topic) { showMessage('Enter a topic before searching.'); return; }
+  if (!connectionsReady()) { showMessage('Set up the search and evaluation connections to get started.'); setView('settings'); return; }
   showMessage('');
   state.controller = new AbortController();
   $('searchButton').disabled = true;
@@ -477,11 +477,11 @@ async function startSearch(event, continuing = false) {
       await persistHistory();
       renderHistory();
     }
-    if (continuing) showMessage(batch.videos.length ? `${batch.videos.length} vídeo(s) novo(s) avaliados. Os relevantes foram selecionados.` : 'Nenhum vídeo novo nesta rodada. Seus resultados e a seleção foram mantidos.', batch.videos.length > 0);
+    if (continuing) showMessage(batch.videos.length ? `${batch.videos.length} new video(s) evaluated. The relevant ones were selected.` : 'No new videos in this round. Your results and selection were kept.', batch.videos.length > 0);
     renderResults();
   } catch (error) {
-    if (error.name !== 'AbortError') showMessage(error.message || 'Falha na pesquisa.');
-    else showMessage('Pesquisa cancelada.');
+    if (error.name !== 'AbortError') showMessage(error.message || 'Search failed.');
+    else showMessage('Search cancelled.');
   } finally {
     state.controller = null;
     $('searchButton').disabled = false;
@@ -514,7 +514,7 @@ function installEvents() {
     state.settings = { ...state.settings, languages: languages.join(',') };
     $('languages').value = state.settings.languages;
     updateLanguageControls();
-    persistSettings().catch(error => showMessage(`Não foi possível salvar os idiomas: ${error.message}`));
+    persistSettings().catch(error => showMessage(`Could not save the languages: ${error.message}`));
   });
   settingsPanel.install();
   $('settingsForm').addEventListener('submit', async event => {
@@ -529,9 +529,8 @@ function installEvents() {
       renderLanguageChoices();
       showSettingsError('');
       updateSetup();
-      refreshNotebookTabs();
       setView('research');
-      showMessage('Configurações salvas neste Chrome.', true);
+      showMessage('Settings saved in this Chrome.', true);
     } catch (error) { showSettingsError(error.message); setView('settings'); }
   });
   document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => { state.filter = button.dataset.filter; renderResults(); }));
@@ -552,17 +551,17 @@ function installEvents() {
   $('copyLinks').addEventListener('click', async () => {
     const links = selectedVideoLinks(state.result, state.selected);
     if (!links) return;
-    try { await navigator.clipboard.writeText(links); showMessage(`${links.split('\n').length} link(s) copiado(s).`, true); }
-    catch { showMessage('Não foi possível copiar os links. Deixe o painel ativo e tente novamente.'); }
+    try { await navigator.clipboard.writeText(links); showMessage(`${links.split('\n').length} link(s) copied.`, true); }
+    catch { showMessage('Could not copy the links. Keep the panel active and try again.'); }
   });
   $('clearResults').addEventListener('click', async () => {
-    if (selectionLocked()) { showMessage('Conclua a busca ou descarte a fila pendente antes de limpar os resultados.'); return; }
+    if (selectionLocked()) { showMessage('Finish the search or discard the pending queue before clearing the results.'); return; }
     state.result = null;
     state.selected.clear();
     await selectionWrite.catch(() => {});
     await chrome.storage.local.remove(['lastSearch', 'selectedVideoIds']);
     renderResults();
-    showMessage('Pesquisa limpa da tela. Suas buscas salvas continuam disponíveis no Histórico.');
+    showMessage('Search cleared from the screen. Your saved searches are still available in History.');
   });
   $('pendingResume').addEventListener('click', () => { if (!state.result || state.importing || !state.importQueue) return; state.selected = new Set(state.importQueue.ids); state.filter = 'approved'; renderResults(); persistSelection().catch(error => showMessage(error.message)); importSelected(); });
   const reviewPendingSource = async confirmed => {
@@ -573,18 +572,18 @@ function installEvents() {
     updateDock();
     try {
       const tab = findNotebookTab(await chrome.tabs.query({}), state.importQueue);
-      if (!tab) throw new Error('Abra o notebook de destino antes de confirmar a revisão.');
+      if (!tab) throw new Error('Open the destination notebook before confirming the review.');
       const response = await chrome.tabs.sendMessage(tab.id, { type: 'TUBELESS_IMPORT_REVIEW', url: videoUrl(uncertain.id), ...(confirmed ? { confirmed: true } : { retry: true }) });
-      if (response?.status !== 'ok') throw new Error(response?.message || 'O notebook não confirmou a revisão. Recarregue a aba e tente novamente.');
+      if (response?.status !== 'ok') throw new Error(response?.message || 'The notebook did not confirm the review. Reload the tab and try again.');
       state.importQueue = confirmed ? markImportConfirmed(state.importQueue, uncertain.id) : { ...state.importQueue, failures: state.importQueue.failures.filter(item => item.id !== uncertain.id) };
       await chrome.storage.local.set({ importQueue: state.importQueue });
-      showMessage(confirmed ? 'Fonte marcada como presente no notebook. Revise os demais itens pendentes ou retome.' : 'Revisão registrada. Revise os demais itens pendentes e retome para enviar os links restantes.', true);
-    } catch (error) { showMessage(error.message || 'Não foi possível registrar a revisão.'); }
+      showMessage(confirmed ? 'Source marked as present in the notebook. Review the other pending items or resume.' : 'Review recorded. Review the other pending items and resume to send the remaining links.', true);
+    } catch (error) { showMessage(error.message || 'Could not record the review.'); }
     finally { state.reviewing = false; updateDock(); }
   };
   $('pendingConfirm').addEventListener('click', () => reviewPendingSource(true));
   $('pendingRetry').addEventListener('click', () => reviewPendingSource(false));
-  $('pendingDiscard').addEventListener('click', async () => { if (state.importing || state.reviewing) return; state.importQueue = null; state.selected.clear(); await chrome.storage.local.remove('importQueue'); await persistSelection(); showMessage('Fila descartada. Os resultados da pesquisa continuam disponíveis.', true); renderResults(); });
+  $('pendingDiscard').addEventListener('click', async () => { if (state.importing || state.reviewing) return; state.importQueue = null; state.selected.clear(); await chrome.storage.local.remove('importQueue'); await persistSelection(); showMessage('Queue discarded. The search results are still available.', true); renderResults(); });
   $('openNotebook').addEventListener('click', async () => {
     const tabs = await chrome.tabs.query({});
     const existing = tabs.find(tab => isNotebookSite(tab.url));
@@ -609,7 +608,7 @@ async function init() {
   if (state.result) $('topic').value = state.result.topic;
   if (state.importQueue && state.result?.topic === state.importQueue.topic) {
     state.selected = new Set(state.importQueue.ids);
-    if (state.selected.size) showMessage('Há uma importação pendente. Revise a seleção e clique em Adicionar fontes para retomar.');
+    if (state.selected.size) showMessage('There is a pending import. Review the selection and click Add sources to resume.');
   }
   renderHistory();
   fillSettings();
@@ -618,4 +617,4 @@ async function init() {
   installEvents();
 }
 
-init().catch(error => showMessage(`Não foi possível iniciar a extensão: ${error.message}`));
+init().catch(error => showMessage(`Could not start the extension: ${error.message}`));

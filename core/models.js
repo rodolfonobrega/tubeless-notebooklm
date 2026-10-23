@@ -1,4 +1,5 @@
 export const MODEL_CATALOG_URL = 'https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json';
+export const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models';
 const PROVIDERS = ['openai', 'groq', 'deepseek', 'openrouter', 'typesafe'];
 const HOSTS = { 'api.openai.com': 'openai', 'api.groq.com': 'groq', 'api.deepseek.com': 'deepseek', 'openrouter.ai': 'openrouter', 'api.typesafe.ai': 'typesafe' };
 const DAY = 86400000;
@@ -19,7 +20,7 @@ export const CURATED_EVALUATION_MODELS = Object.freeze({
 });
 
 export function parseModelCatalog(raw, now = Date.now()) {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Catálogo de modelos inválido.');
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Invalid model catalog.');
   const maps = Object.fromEntries(PROVIDERS.map(provider => [provider, new Map()]));
   for (const [key, metadata] of Object.entries(raw)) {
     const provider = metadata?.litellm_provider;
@@ -36,7 +37,7 @@ export function parseModelCatalog(raw, now = Date.now()) {
     if (!previous || (previous.deprecatedOn && (!row.deprecatedOn || row.deprecatedOn > previous.deprecatedOn))) maps[provider].set(id, row);
   }
   const foundAny = Object.values(maps).some(map => map.size > 0);
-  if (!foundAny) throw new Error('Catálogo sem modelos compatíveis.');
+  if (!foundAny) throw new Error('Catalog has no compatible models.');
   for (const [provider, models] of Object.entries(CURATED_EVALUATION_MODELS)) {
     if (!maps[provider]) continue;
     for (const id of models) {
@@ -47,6 +48,26 @@ export function parseModelCatalog(raw, now = Date.now()) {
   }
   const providers = Object.fromEntries(PROVIDERS.map(provider => [provider, [...maps[provider].values()].sort((a, b) => a.id.localeCompare(b.id, 'en'))]));
   return { version: 2, fetchedAt: now, providers };
+}
+
+// OpenRouter lists its own models. Text models serve generation (chat); decision models serve evaluation.
+export function parseOpenRouterModels(raw, now = Date.now()) {
+  if (!Array.isArray(raw?.data)) throw new Error('Invalid OpenRouter model list.');
+  const rows = [];
+  for (const model of raw.data) {
+    const id = model?.id;
+    if (!validId(id)) continue;
+    const outputs = Array.isArray(model.architecture?.output_modalities) ? model.architecture.output_modalities : [];
+    const modes = [];
+    if (outputs.includes('text') && !/(^|\/)jev(?:-|$)/i.test(id)) modes.push('chat');
+    if (outputs.includes('decisions')) modes.push('evaluation');
+    for (const mode of modes) {
+      const row = { id, mode };
+      if (validDate(model.expiration_date)) row.deprecatedOn = model.expiration_date;
+      if (active(row, now)) rows.push(row);
+    }
+  }
+  return rows;
 }
 
 function validSnapshot(value) {
@@ -67,11 +88,22 @@ export function modelsForConnection(catalog, baseUrl, protocol = 'chat', now = D
   return list;
 }
 
+// Returns the call format a catalog model needs, or null when the catalog cannot tell.
+export function inferEvaluationProtocol(catalog, baseUrl, modelId) {
+  let provider;
+  try { provider = HOSTS[new URL(baseUrl).hostname]; } catch { return null; }
+  if (provider === 'typesafe') return /(^|\/)jev(?:-|$)/i.test(modelId) ? 'systemone' : null;
+  const row = (catalog?.providers?.[provider] || []).find(item => item.id === modelId);
+  if (!row) return null;
+  if (provider === 'openrouter') return row.mode === 'evaluation' ? 'decisions' : 'chat';
+  return 'chat';
+}
+
 async function readJson(response) {
-  if (!response.ok) throw new Error(`Catálogo indisponível (HTTP ${response.status}).`);
-  if (Number(response.headers.get('content-length')) > MAX_BYTES) throw new Error('Catálogo excede o limite de tamanho.');
+  if (!response.ok) throw new Error(`Catalog unavailable (HTTP ${response.status}).`);
+  if (Number(response.headers.get('content-length')) > MAX_BYTES) throw new Error('Catalog exceeds the size limit.');
   const reader = response.body?.getReader();
-  if (!reader) throw new Error('Resposta do catálogo vazia.');
+  if (!reader) throw new Error('Empty catalog response.');
   const decoder = new TextDecoder();
   let size = 0;
   let text = '';
@@ -80,7 +112,7 @@ async function readJson(response) {
       const { value, done } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > MAX_BYTES) { await reader.cancel(); throw new Error('Catálogo excede o limite de tamanho.'); }
+      if (size > MAX_BYTES) { await reader.cancel(); throw new Error('Catalog exceeds the size limit.'); }
       text += decoder.decode(value, { stream: true });
     }
     text += decoder.decode();
@@ -107,9 +139,22 @@ export class ModelCatalog {
       return this.catalog;
     }
     const bundled = await readJson(await this.fetchImpl(new URL('../assets/model-catalog.json', import.meta.url).href));
-    if (!validSnapshot(bundled)) throw new Error('Catálogo local inválido.');
+    if (!validSnapshot(bundled)) throw new Error('Invalid local catalog.');
     this.catalog = bundled;
     return this.catalog;
+  }
+
+  // Replaces the LiteLLM rows for OpenRouter. If the OpenRouter list fails, the LiteLLM rows stay.
+  async addOpenRouterModels(catalog) {
+    try {
+      const response = await this.fetchImpl(OPENROUTER_MODELS_URL, { credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(15000) });
+      const rows = parseOpenRouterModels(await readJson(response), this.now());
+      const byKey = new Map(rows.map(row => [`${row.mode}:${row.id}`, row]));
+      for (const id of CURATED_EVALUATION_MODELS.openrouter) {
+        if (!byKey.has(`evaluation:${id}`)) byKey.set(`evaluation:${id}`, { id, mode: 'evaluation' });
+      }
+      catalog.providers.openrouter = [...byKey.values()].sort((a, b) => a.id.localeCompare(b.id, 'en'));
+    } catch { /* Keep the LiteLLM rows for OpenRouter. */ }
   }
 
   refresh() {
@@ -117,6 +162,7 @@ export class ModelCatalog {
     this.pending = (async () => {
       const response = await this.fetchImpl(MODEL_CATALOG_URL, { credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(15000) });
       const catalog = parseModelCatalog(await readJson(response), this.now());
+      await this.addOpenRouterModels(catalog);
       this.catalog = catalog;
       this.needsRefresh = false;
       try { await this.storage?.set({ modelCatalog: catalog }); } catch { /* Fresh list still works for this panel. */ }

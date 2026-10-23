@@ -73,7 +73,7 @@
   }
   async function message(request) {
     try { return await chrome.runtime.sendMessage(request); }
-    catch { return { ok: false, message: 'Recarregue a extensão e a aba do notebook para identificar o controle.' }; }
+    catch { return { ok: false, message: 'Reload the extension and the notebook tab to identify the control.' }; }
   }
   async function locate(action, root, cache, found) {
     const pagePath = location.pathname;
@@ -101,16 +101,16 @@
     await until(() => list().some(enabled), 1500);
     const unsafeAction = /\b(delete|remove|excluir|apagar|remover|rename|renomear|cancel|cancelar|close|fechar|back|voltar|discover|descobrir)\b/i;
     const elements = list().filter(element => enabled(element) && (kind === 'field' || !unsafeAction.test(label(element)))).slice(0, 60);
-    if (!elements.length) throw layoutError('Nenhum controle disponível para esta etapa. Abra a janela de adicionar YouTube e tente novamente.');
+    if (!elements.length) throw layoutError('No control is available for this step. Open the add-YouTube dialog and try again.');
     const descriptors = elements.map(element => describe(element, kind));
     const candidates = descriptors.map(({ tag, role, label: name, placeholder, formControlName }, index) => {
       return { id: `e${index}`, kind, tag, role, label: name, placeholder, formControlName };
     });
     const response = await message({ type: 'TUBELESS_LOCATE_ELEMENT', action, candidates });
-    if (!response?.ok) throw layoutError(response?.message || 'Não foi possível identificar o controle do notebook.');
+    if (!response?.ok) throw layoutError(response?.message || 'Could not identify the notebook control.');
     const index = candidates.findIndex(candidate => candidate.id === response.id);
     const target = elements[index];
-    if (!target || location.pathname !== pagePath || !enabled(target) || !root.contains(target) || !matchesDescriptor(target, descriptors[index]) || dialog() !== root && root !== document) throw layoutError('A janela mudou durante a identificação. Tente novamente.');
+    if (!target || location.pathname !== pagePath || !enabled(target) || !root.contains(target) || !matchesDescriptor(target, descriptors[index]) || dialog() !== root && root !== document) throw layoutError('The dialog changed during identification. Try again.');
     found[action] = describe(target, kind);
     return target;
   }
@@ -158,17 +158,17 @@
   async function importVideos(input, notebookUrl) {
     if (notebookUrl) {
       const expected = /^https:\/\/(?:notebook\.google\.com|notebooklm\.google\.com)\/notebook\/([a-zA-Z0-9_-]+)\/?$/.exec(notebookUrl);
-      if (!expected || location.pathname.replace(/\/$/, '') !== `/notebook/${expected[1]}`) throw layoutError('O notebook mudou antes da inserção. Volte ao destino escolhido e tente novamente.');
+      if (!expected || location.pathname.replace(/\/$/, '') !== `/notebook/${expected[1]}`) throw layoutError('The notebook changed before insertion. Go back to the chosen destination and try again.');
     }
-    if (!Array.isArray(input) || !input.length || input.length > 1000) throw new Error('Seleção de vídeos inválida.');
+    if (!Array.isArray(input) || !input.length || input.length > 1000) throw new Error('Invalid video selection.');
     const videos = input.map(item => {
-      if (!/^https:\/\/www\.youtube\.com\/watch\?v=[a-zA-Z0-9_-]{11}$/.test(item?.url || '')) throw new Error('URL de vídeo inválida.');
+      if (!/^https:\/\/www\.youtube\.com\/watch\?v=[a-zA-Z0-9_-]{11}$/.test(item?.url || '')) throw new Error('Invalid video URL.');
       return { url: item.url, title: String(item.title || '').slice(0, 1000), id: new URL(item.url).searchParams.get('v') };
     });
-    if (new Set(videos.map(item => item.id)).size !== videos.length) throw new Error('A seleção contém links repetidos.');
-    if (!/^\/notebook\/[a-zA-Z0-9_-]+\/?$/.test(location.pathname)) throw new Error('Abra um notebook antes de importar.');
+    if (new Set(videos.map(item => item.id)).size !== videos.length) throw new Error('The selection contains duplicate links.');
+    if (!/^\/notebook\/[a-zA-Z0-9_-]+\/?$/.test(location.pathname)) throw new Error('Open a notebook before importing.');
     const destinationPath = location.pathname;
-    const assertDestination = () => { if (location.pathname !== destinationPath) throw layoutError('O notebook mudou antes da inserção. Volte ao destino escolhido e tente novamente.'); };
+    const assertDestination = () => { if (location.pathname !== destinationPath) throw layoutError('The notebook changed before insertion. Go back to the chosen destination and try again.'); };
     const entries = sourceEntries();
     const late = new Set();
     for (const [key, transaction] of confirmedReceipts) {
@@ -182,13 +182,13 @@
     const outcomes = new Map();
     const additions = videos.filter(video => {
       if (!late.has(video.url) && !sourceSnapshot(video.title, video.id, entries).urlMatches) return true;
-      outcomes.set(video.id, { id: video.id, status: 'duplicate', message: 'Este link já está nas fontes do notebook.' });
+      outcomes.set(video.id, { id: video.id, status: 'duplicate', message: 'This link is already in the notebook sources.' });
       return false;
     });
     const result = () => videos.map(video => outcomes.get(video.id));
     if (!additions.length) return result();
     if ([...pending.values()].some(transaction => transaction.path === destinationPath)) {
-      additions.forEach(video => outcomes.set(video.id, { id: video.id, status: pending.has(`${destinationPath}:${video.id}`) ? 'uncertain' : 'error', message: 'Há fontes do envio anterior sem confirmação. Revise os itens pendentes antes de repetir.' }));
+      additions.forEach(video => outcomes.set(video.id, { id: video.id, status: pending.has(`${destinationPath}:${video.id}`) ? 'uncertain' : 'error', message: 'There are sources from the previous send without confirmation. Review the pending items before retrying.' }));
       return result();
     }
     const saved = await message({ type: 'TUBELESS_LOCATOR_CACHE', op: 'get', locale: locale() });
@@ -202,7 +202,7 @@
       add.click();
       root = await until(() => dialog() !== document && dialog(), 8000);
       assertDestination();
-      if (!root) throw layoutError('A janela de adicionar fontes não abriu. Abra-a no notebook e tente novamente.');
+      if (!root) throw layoutError('The add-sources dialog did not open. Open it in the notebook and try again.');
     }
     let field = fields(root).find(element => enabled(element) && /url|link|youtube/i.test([element.getAttribute('formcontrolname'), element.placeholder, label(element)].join(' ')));
     if (!field && (findControl(LABELS.youtube, root) || findControl(LABELS.links, root) || !fields(root).length)) {
@@ -212,16 +212,16 @@
       await until(() => fields(dialog()).some(enabled), 8000);
       assertDestination();
       root = dialog();
-      if (root === document) throw layoutError('A janela de YouTube fechou antes da inserção. Tente novamente.');
+      if (root === document) throw layoutError('The YouTube dialog closed before insertion. Try again.');
     }
     field = await locate('url', root, cache, found);
     assertDestination();
-    if (additions.length > 1 && field.type === 'url') throw layoutError('Este campo aceita apenas um link. Abra a opção Sites/Links para adicionar o lote ou use Copiar links selecionados.');
+    if (additions.length > 1 && field.type === 'url') throw layoutError('This field accepts only one link. Open the Websites/Links option to add the batch, or use Copy selected links.');
     const value = additions.map(video => video.url).join(field instanceof HTMLTextAreaElement ? '\n' : ' ');
     setValue(field, value);
     const submit = await locate('submit', root, cache, found);
     assertDestination();
-    if (!enabled(submit) || !field.isConnected || field.value !== value) throw layoutError('O formulário mudou antes da inserção. Tente novamente.');
+    if (!enabled(submit) || !field.isConnected || field.value !== value) throw layoutError('The form changed before insertion. Try again.');
     const previousError = errorText();
     let errorCleared = !previousError;
     const titleKey = video => normalizeTitle(video.title);
@@ -233,13 +233,13 @@
       return transaction;
     });
     submit.click();
-    let unconfirmedMessage = 'A interface não confirmou esta fonte. Verifique o notebook antes de repetir.';
+    let unconfirmedMessage = 'The interface did not confirm this source. Check the notebook before retrying.';
     await until(() => {
-      if (location.pathname !== destinationPath) { unconfirmedMessage = 'O notebook mudou antes de confirmar o lote. Verifique o destino original.'; return true; }
+      if (location.pathname !== destinationPath) { unconfirmedMessage = 'The notebook changed before the batch was confirmed. Check the original destination.'; return true; }
       const current = sourceEntries();
       for (const transaction of transactions) {
         if (!outcomes.has(transaction.id) && confirmedSince(transaction, current)) {
-          outcomes.set(transaction.id, { id: transaction.id, status: 'imported', message: 'Nova fonte confirmada no notebook.' });
+          outcomes.set(transaction.id, { id: transaction.id, status: 'imported', message: 'New source confirmed in the notebook.' });
           pending.delete(`${destinationPath}:${transaction.id}`);
           confirmedReceipts.set(`${destinationPath}:${transaction.id}`, transaction);
         }
@@ -272,14 +272,14 @@
       if (request.confirmed === true || request.retry === true && !busy()) {
         pending.delete(entry[0]);
         respond({ status: 'ok' });
-      } else respond({ status: 'error', message: 'A inserção ainda está em andamento. Aguarde a janela do notebook.' });
+      } else respond({ status: 'error', message: 'Insertion is still in progress. Wait for the notebook dialog.' });
       return false;
     }
     if (!['TUBELESS_IMPORT', 'TUBELESS_IMPORT_BATCH'].includes(request?.type)) return false;
     const batch = request.type === 'TUBELESS_IMPORT_BATCH';
     const input = batch ? request.videos : [{ url: request.url, title: request.title }];
     queue = queue.catch(() => {}).then(() => importVideos(input, request.notebookUrl));
-    queue.then(outcomes => respond(batch ? { status: 'batch', outcomes } : outcomes[0]), error => respond({ status: [...pending.values()].some(transaction => transaction.path === location.pathname) ? 'uncertain' : 'error', reason: error.reason, message: error?.message || 'Falha na importação.' }));
+    queue.then(outcomes => respond(batch ? { status: 'batch', outcomes } : outcomes[0]), error => respond({ status: [...pending.values()].some(transaction => transaction.path === location.pathname) ? 'uncertain' : 'error', reason: error.reason, message: error?.message || 'Import failed.' }));
     return true;
   });
 })();

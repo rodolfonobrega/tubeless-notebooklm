@@ -9,21 +9,21 @@ import { sanitizeError } from '../core/connections.js';
 const localEnv = fileURLToPath(new URL('../.env', import.meta.url));
 const envPath = process.argv.find(arg => arg.startsWith('--env='))?.slice(6) || (existsSync(localEnv) ? localEnv : fileURLToPath(new URL('../../.env', import.meta.url)));
 try { loadEnvFile(envPath); }
-catch { console.error('Arquivo .env não encontrado. Use --env=caminho para selecionar outro arquivo.'); process.exit(1); }
+catch { console.error('.env file not found. Use --env=path to select another file.'); process.exit(1); }
 const env = process.env;
 const provider = process.argv.find(arg => arg.startsWith('--provider='))?.slice(11) || 'openai';
 const useChat = process.argv.includes('--openai-evaluation');
 let settings;
 try { settings = settingsFromEnv(env, { provider, chatEvaluation: useChat }); }
-catch { console.error('Configuração de teste inválida. Confira o provedor e as URLs no .env.'); process.exit(1); }
+catch { console.error('Invalid test configuration. Check the provider and URLs in .env.'); process.exit(1); }
 const evaluationKey = settings.evaluationApiKey;
-console.log(`Geração: ${new URL(settings.llmBaseUrl).host}, modelo ${settings.expansionModel}`);
-console.log(`Avaliação: ${useChat ? 'Chat Completions (teste com LLM)' : settings.evaluationProtocol}`);
+console.log(`Generation: ${new URL(settings.llmBaseUrl).host}, model ${settings.expansionModel}`);
+console.log(`Evaluation: ${useChat ? 'Chat Completions (LLM test)' : settings.evaluationProtocol}`);
 const secrets = [settings.llmApiKey, settings.evaluationApiKey, settings.youtubeKey];
 try {
   const results = await testConnections(settings, { onResult: result => {
     if (result.status === 'testing') return;
-    if (result.id === 'evaluation' && !evaluationKey && !useChat) { console.log('Avaliação: NÃO TESTADA — configure EVALUATION_API_KEY no .env.'); return; }
+    if (result.id === 'evaluation' && !evaluationKey && !useChat) { console.log('Evaluation: NOT TESTED — set EVALUATION_API_KEY in .env.'); return; }
     console.log(`${result.title}: ${result.status.toUpperCase()} — ${result.message} (${result.durationMs} ms)`);
   } });
   if (results.some(result => result.status === 'error' && !(result.id === 'evaluation' && !evaluationKey && !useChat))) process.exitCode = 1;

@@ -12,7 +12,7 @@ const first = {
   ]
 };
 
-test('novos relevantes entram selecionados, desmarcações antigas permanecem e cópia segue relevância', () => {
+test('new relevant videos come in selected, old deselections stay, and copying follows relevance', () => {
   const batch = { topic: first.topic, terms: [{ language: 'pt', query: 'armazenamento' }], warnings: [], discoveredIds: ['abc12345678', 'jkl12345678', 'mno12345678'], discoveredCount: 3,
     videos: [{ id: 'abc12345678', probability: 0.99, status: 'approved' }, { id: 'jkl12345678', probability: 0.95, status: 'approved' }, { id: 'mno12345678', probability: 0.3, status: 'rejected' }] };
   const merged = mergeDiscoveryResults(first, batch);
@@ -26,18 +26,18 @@ test('novos relevantes entram selecionados, desmarcações antigas permanecem e 
   assert.equal(first.videos.length, 3);
 });
 
-test('restauração usa seleção salva preservando escolhas manuais inclusive abaixo do score', () => {
+test('restore uses the saved selection, keeping manual choices even below the score', () => {
   assert.deepEqual([...selectionForResult(first)], ['abc12345678', 'def12345678']);
   assert.deepEqual([...selectionForResult(first, [])], []);
   assert.deepEqual([...selectionForResult(first, ['def12345678', 'ghi12345678', 'inexistente'])], ['def12345678', 'ghi12345678']);
   assert.equal(selectedVideoLinks(first, new Set(['ghi12345678'])), 'https://www.youtube.com/watch?v=ghi12345678');
 });
 
-test('rodada vazia preserva vídeos anteriores e guarda os termos tentados', () => {
+test('an empty round keeps earlier videos and stores the terms tried', () => {
   const merged = mergeDiscoveryResults(first, { topic: first.topic, terms: [{ language: 'en', query: 'renewable storage' }], videos: [], warnings: ['Nenhum vídeo novo'], discoveredIds: first.discoveredIds, discoveredCount: 3 });
   assert.equal(merged.videos.length, 3);
   assert.equal(merged.discoveredCount, 3);
   assert.deepEqual(merged.terms.map(term => term.query), ['solar residencial', 'renewable storage']);
   assert.match(merged.warnings[0], /novo/);
-  assert.throws(() => mergeDiscoveryResults(first, { topic: 'outro', videos: [], terms: [] }), /mesmo tema/);
+  assert.throws(() => mergeDiscoveryResults(first, { topic: 'outro', videos: [], terms: [] }), /same search topic/);
 });

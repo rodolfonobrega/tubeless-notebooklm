@@ -6,7 +6,7 @@ import { normalizeSettings } from '../core/search.js';
 const settings = { languageList: ['pt', 'en'], termsPerLanguage: 1, maxEvaluations: 3, threshold: 0.7 };
 const video = (id, foundBy) => ({ id, title: id, foundBy });
 
-test('avalia 250 vídeos e preserva erros parciais e a ordem de relevância', async () => {
+test('evaluates 250 videos and keeps partial errors and relevance order', async () => {
   const assessed = new Set();
   const progress = [];
   const result = await runDiscovery({
@@ -26,12 +26,12 @@ test('avalia 250 vídeos e preserva erros parciais e a ordem de relevância', as
   assert.equal(result.videos[0].index, 249);
   assert.equal(result.videos.at(-1).index, 7);
   assert.equal(result.videos.at(-1).status, 'error');
-  assert.match(result.warnings.join(' '), /10 vídeo\(s\) ficaram fora/);
+  assert.match(result.warnings.join(' '), /10 video\(s\) fell outside/);
   assert.deepEqual(progress, Array.from({ length: 251 }, (_, index) => index));
 });
 
 for (const concurrency of [1, 8, 16, undefined]) {
-  test(`avaliações assíncronas respeitam ${concurrency ?? 'o padrão de 8'} chamada(s) simultânea(s)`, async () => {
+  test(`asynchronous evaluations respect ${concurrency ?? 'the default of 8'} simultaneous call(s)`, async () => {
     let active = 0;
     let peak = 0;
     const result = await runDiscovery({
@@ -52,7 +52,7 @@ for (const concurrency of [1, 8, 16, undefined]) {
   });
 }
 
-test('cancelamento interrompe chamadas em paralelo sem iniciar os vídeos pendentes', async () => {
+test('cancellation stops parallel calls without starting pending videos', async () => {
   const controller = new AbortController();
   let started = 0;
   let active = 0;
@@ -79,7 +79,7 @@ test('cancelamento interrompe chamadas em paralelo sem iniciar os vídeos penden
   assert.deepEqual(progress, [0]);
 });
 
-test('busca termos em paralelo, tolera falha parcial e usa Jev como única aprovação', async () => {
+test('searches terms in parallel, tolerates partial failure, and uses Jev as the only approval', async () => {
   const result = await runDiscovery({
     topic: 'tema', settings,
     expand: async () => [{ language: 'pt', query: 'termo pt' }, { language: 'en', query: 'term en' }],
@@ -93,7 +93,7 @@ test('busca termos em paralelo, tolera falha parcial e usa Jev como única aprov
   assert.equal(result.videos.filter(v => v.status === 'approved').length, 1);
 });
 
-test('falha da expansão mantém busca com tema original e avisa', async () => {
+test('expansion failure keeps the search on the original topic and warns', async () => {
   const result = await runDiscovery({
     topic: 'energia', settings,
     expand: async () => { throw new Error('sem créditos'); },
@@ -102,34 +102,34 @@ test('falha da expansão mantém busca com tema original e avisa', async () => {
     assess: async () => ({ probability: 0.8, accepted: true })
   });
   assert.equal(result.terms[0].query, 'energia');
-  assert.match(result.warnings[0], /variar os termos/i);
+  assert.match(result.warnings[0], /vary the terms/i);
 });
 
-test('saída inesperada da expansão também mantém o tema original', async () => {
+test('unexpected expansion output also keeps the original topic', async () => {
   const result = await runDiscovery({ topic: 'energia', settings, expand: async () => undefined, search: async () => [video('abc12345678', 'energia')], enrich: async items => items, assess: async () => ({ probability: 0.8, accepted: true }) });
   assert.deepEqual(result.terms, [{ language: 'pt', query: 'energia' }]);
-  assert.match(result.warnings[0], /variar os termos/i);
+  assert.match(result.warnings[0], /vary the terms/i);
 });
 
-test('erro em todas as buscas não aparece como lista vazia', async () => {
+test('an error in every search is not shown as an empty list', async () => {
   await assert.rejects(runDiscovery({ topic: 'tema', settings, expand: async () => [{ language: 'pt', query: 'x' }], search: async () => { throw new Error('quota'); }, enrich: async () => [], assess: async () => ({ probability: 1, accepted: true }) }), /quota/);
 });
 
-test('busca pública não avalia vídeos cujos detalhes não puderam ser verificados', async () => {
+test('public search does not evaluate videos whose details could not be verified', async () => {
   const assessed = [];
   const result = await runDiscovery({ topic: 'energia', settings: { ...settings, youtubeMode: 'web', captionedOnly: true }, expand: async () => [{ language: 'pt', query: 'solar' }], search: async () => [video('abc12345678', 'solar'), video('def12345678', 'solar')], enrich: async items => items.map((item, index) => index ? { ...item, detailError: 'bloqueio', captionAvailable: undefined } : { ...item, captionAvailable: true, description: 'Completa' }), assess: async (_topic, item) => { assessed.push(item.id); return { probability: 0.9, accepted: true }; } });
   assert.deepEqual(assessed, ['abc12345678']);
   assert.equal(result.videos.length, 1);
-  assert.match(result.warnings[0], /não puderam ser verificados/i);
+  assert.match(result.warnings[0], /could not be verified/i);
 });
 
-test('falha completa nos detalhes públicos não aprova apenas pelo título', async () => {
+test('total failure in public details does not approve based on the title alone', async () => {
   let assessed = false;
-  await assert.rejects(runDiscovery({ topic: 'energia', settings: { ...settings, youtubeMode: 'web' }, expand: async () => [{ language: 'pt', query: 'solar' }], search: async () => [video('abc12345678', 'solar')], enrich: async () => { throw new Error('bloqueio'); }, assess: async () => { assessed = true; return { probability: 0.9, accepted: true }; } }), /detalhes/i);
+  await assert.rejects(runDiscovery({ topic: 'energia', settings: { ...settings, youtubeMode: 'web' }, expand: async () => [{ language: 'pt', query: 'solar' }], search: async () => [video('abc12345678', 'solar')], enrich: async () => { throw new Error('bloqueio'); }, assess: async () => { assessed = true; return { probability: 0.9, accepted: true }; } }), /details/i);
   assert.equal(assessed, false);
 });
 
-test('limite de avaliação intercala os resultados dos idiomas', async () => {
+test('evaluation limit interleaves the results of the languages', async () => {
   const assessed = [];
   await runDiscovery({
     topic: 'tema', settings: { ...settings, maxEvaluations: 4 },
@@ -143,7 +143,7 @@ test('limite de avaliação intercala os resultados dos idiomas', async () => {
   assert.deepEqual(assessed.sort(), ['AAA00000001', 'AAA00000002', 'BBB00000001', 'BBB00000002']);
 });
 
-test('API oficial também exclui vídeos sem legendas quando o filtro está ativo', async () => {
+test('official API also excludes videos without captions when the filter is on', async () => {
   const assessed = [];
   const result = await runDiscovery({
     topic: 'energia', settings: { ...settings, youtubeMode: 'api', captionedOnly: true },
@@ -156,7 +156,7 @@ test('API oficial também exclui vídeos sem legendas quando o filtro está ativ
   assert.equal(result.videos.length, 1);
 });
 
-test('falha nos detalhes da API impede aprovação quando é preciso verificar legendas', async () => {
+test('API details failure blocks approval when captions must be verified', async () => {
   let assessed = false;
   await assert.rejects(runDiscovery({
     topic: 'energia', settings: { ...settings, youtubeMode: 'api', captionedOnly: true },
@@ -164,11 +164,11 @@ test('falha nos detalhes da API impede aprovação quando é preciso verificar l
     search: async () => [video('abc12345678', 'solar')],
     enrich: async () => { throw new Error('quota'); },
     assess: async () => { assessed = true; return { probability: 0.9, accepted: true }; }
-  }), /detalhes/i);
+  }), /details/i);
   assert.equal(assessed, false);
 });
 
-test('continuação exclui termos antigos e vídeos já avaliados antes de gastar em detalhes', async () => {
+test('continuation drops old terms and already evaluated videos before spending on details', async () => {
   const previousResult = { topic: 'energia', terms: [{ language: 'pt', query: '  ENERGIA solar ' }], videos: [{ ...video('abc12345678', 'energia solar'), status: 'approved', probability: 0.8 }], rounds: 1 };
   const searched = [];
   const assessed = [];
@@ -188,19 +188,19 @@ test('continuação exclui termos antigos e vídeos já avaliados antes de gasta
   assert.equal(result.videos.length, 1);
 });
 
-test('continuação sem vídeos novos retorna lote vazio e não repete avaliação', async () => {
+test('continuation with no new videos returns an empty batch and does not re-evaluate', async () => {
   const result = await runDiscovery({
     topic: 'energia', settings, previousResult: { topic: 'energia', terms: [{ language: 'pt', query: 'antigo' }], videos: [video('abc12345678', 'antigo')] },
     expand: async () => [{ language: 'pt', query: 'novo' }], search: async () => [video('abc12345678', 'novo')],
-    enrich: async () => { assert.fail('Detalhes antigos não devem ser chamados'); }, assess: async () => { assert.fail('Avaliação antiga não deve ser chamada'); }
+    enrich: async () => { assert.fail('Old details must not be called'); }, assess: async () => { assert.fail('Old evaluation must not be called'); }
   });
   assert.deepEqual(result.videos, []);
-  assert.match(result.warnings.join(' '), /nenhum vídeo novo/i);
+  assert.match(result.warnings.join(' '), /no new videos/i);
 });
 
-test('continuação filtra repetições antes do limite de termos e não busca tema original em falha', async () => {
+test('continuation filters repeats before the term limit and does not search the original topic on failure', async () => {
   const previousResult = { topic: 'energia', terms: [{ language: 'pt', query: 'antigo' }], videos: [] };
   const options = { topic: 'energia', settings, previousResult, search: async () => { assert.fail('Nenhuma busca repetida deve ser disparada'); } };
-  await assert.rejects(runDiscovery({ ...options, expand: async () => [{ language: 'pt', query: 'antigo' }] }), /termos novos/i);
+  await assert.rejects(runDiscovery({ ...options, expand: async () => [{ language: 'pt', query: 'antigo' }] }), /new terms/i);
   await assert.rejects(runDiscovery({ ...options, expand: async () => { throw new Error('quota'); } }), /quota/);
 });

@@ -24,8 +24,8 @@ async function mapLimit(items, limit, work, signal, progress) {
 
 export async function runDiscovery({ topic, settings, previousResult, fetchImpl = fetch, signal, onProgress = () => {}, expand, search, enrich, assess }) {
   const cleanTopic = String(topic || '').trim();
-  if (!cleanTopic) throw new Error('Informe um tema para pesquisar.');
-  if (previousResult && previousResult.topic !== cleanTopic) throw new Error('A continuação precisa usar o mesmo tema da pesquisa.');
+  if (!cleanTopic) throw new Error('Enter a topic to search for.');
+  if (previousResult && previousResult.topic !== cleanTopic) throw new Error('Continuation must use the same search topic.');
   const { maxEvaluations, evaluationConcurrency } = normalizeSettings(settings);
   const context = { previousTerms: previousResult?.terms || [], round: previousResult ? (previousResult.rounds || 1) + 1 : 1 };
   const previousIds = new Set(previousResult?.videos.map(video => video.id) || []);
@@ -40,16 +40,16 @@ export async function runDiscovery({ topic, settings, previousResult, fetchImpl 
   let terms;
   try {
     terms = await doExpand(cleanTopic, context);
-    if (!Array.isArray(terms)) throw new Error('lista de termos inválida');
+    if (!Array.isArray(terms)) throw new Error('invalid list of terms');
   }
   catch (error) {
     if (signal?.aborted) throw error;
-    if (previousResult) throw new Error(`Não foi possível preparar termos novos: ${error.message}. Seus resultados anteriores foram mantidos.`);
+    if (previousResult) throw new Error(`Could not prepare new terms: ${error.message}. Your previous results were kept.`);
     terms = [{ language: settings.languageList?.[0] || 'pt', query: cleanTopic }];
-    warnings.push(`Não foi possível variar os termos: ${error.message}. Busca pelo tema original.`);
+    warnings.push(`Could not vary the terms: ${error.message}. Searching the original topic.`);
   }
   terms = freshSearchTerms(terms, context.previousTerms, settings.languageList || ['pt'], settings.termsPerLanguage || 3, cleanTopic);
-  if (!terms.length) throw new Error('O modelo não gerou termos novos. Os resultados anteriores foram mantidos. Tente novamente ou ajuste os idiomas.');
+  if (!terms.length) throw new Error('The model generated no new terms. Your previous results were kept. Try again or adjust the languages.');
 
   onProgress({ phase: 'searching', completed: 0, total: terms.length });
   const searchConcurrency = settings.youtubeMode === 'web' ? 2 : 4;
@@ -58,23 +58,23 @@ export async function runDiscovery({ topic, settings, previousResult, fetchImpl 
   const searchErrors = [];
   searched.forEach((outcome, index) => {
     if (outcome.status === 'fulfilled') found.push(...outcome.value);
-    else searchErrors.push(`${terms[index].query}: ${outcome.reason?.message || 'erro'}`);
+    else searchErrors.push(`${terms[index].query}: ${outcome.reason?.message || 'error'}`);
   });
   if (searchErrors.length) {
-    const isBlockOrConsent = searchErrors.some(err => /consentimento|bloqueio|Failed to fetch/i.test(err));
-    const tip = isBlockOrConsent && settings.youtubeMode === 'web' ? ' (Dica: o YouTube público pode impor restrições temporárias a requisições anônimas. Tente novamente em alguns segundos ou ative a API oficial nas configurações).' : '';
-    warnings.push(`${searchErrors.length} busca(s) falharam: ${searchErrors.join(' | ')}${tip}`);
+    const isBlockOrConsent = searchErrors.some(err => /consent|blocked|Failed to fetch/i.test(err));
+    const tip = isBlockOrConsent && settings.youtubeMode === 'web' ? ' (Tip: public YouTube may impose temporary limits on anonymous requests. Try again in a few seconds or enable the official API in the settings).' : '';
+    warnings.push(`${searchErrors.length} search(es) failed: ${searchErrors.join(' | ')}${tip}`);
   }
   if (!found.length && (!previousResult || searchErrors.length)) {
-    const firstReason = searchErrors[0] || 'Nenhum vídeo encontrado para este tema.';
-    throw new Error(searchErrors.length ? `Nenhuma busca concluiu com vídeos. ${firstReason}` : firstReason);
+    const firstReason = searchErrors[0] || 'No videos found for this topic.';
+    throw new Error(searchErrors.length ? `No search returned videos. ${firstReason}` : firstReason);
   }
 
   const discovered = uniqueVideos(found);
   const discoveredIds = discovered.map(video => video.id);
   const unique = discovered.filter(video => !previousIds.has(video.id));
   if (!unique.length && previousResult) {
-    warnings.push('Nenhum vídeo novo foi encontrado nesta rodada. Os resultados anteriores continuam disponíveis. Tente novos idiomas ou outra rodada.');
+    warnings.push('No new videos were found in this round. Previous results are still available. Try new languages or another round.');
     onProgress({ phase: 'done', completed: 0, total: 0 });
     return { topic: cleanTopic, terms, videos: [], warnings, discoveredCount: discovered.length, discoveredIds };
   }
@@ -103,27 +103,27 @@ export async function runDiscovery({ topic, settings, previousResult, fetchImpl 
     }
   } catch (error) {
     if (signal?.aborted) throw error;
-    if (settings.youtubeMode === 'web' || requireCaptions) throw new Error(`Não foi possível verificar os detalhes dos vídeos: ${error.message}`);
-    warnings.push(`Não foi possível carregar todos os detalhes: ${error.message}. Avaliação limitada às informações da busca.`);
+    if (settings.youtubeMode === 'web' || requireCaptions) throw new Error(`Could not verify the video details: ${error.message}`);
+    warnings.push(`Could not load all details: ${error.message}. Evaluation limited to the search information.`);
     videos = candidates;
   }
   const unread = videos.filter(video => video.detailError);
-  if (unread.length) warnings.push(`${unread.length} vídeo(s) não puderam ser verificados e foram excluídos da avaliação. ${unread[0].detailError}`);
+  if (unread.length) warnings.push(`${unread.length} video(s) could not be verified and were excluded from the evaluation. ${unread[0].detailError}`);
   videos = videos.filter(video => !video.detailError && (!requireCaptions || video.captionAvailable === true));
-  if (!videos.length) throw new Error(unread[0]?.detailError || 'Nenhum vídeo disponível com os filtros escolhidos. Tente outros termos ou idiomas.');
+  if (!videos.length) throw new Error(unread[0]?.detailError || 'No videos available with the chosen filters. Try other terms or languages.');
 
   onProgress({ phase: 'evaluating', completed: 0, total: videos.length });
   const decisions = await mapLimit(videos, evaluationConcurrency, video => doAssess(cleanTopic, video), signal, (completed, total) => onProgress({ phase: 'evaluating', completed, total }));
   const evaluated = sortVideosByRelevance(videos.map((video, index) => {
     const decision = decisions[index];
-    if (decision.status === 'rejected') return { ...video, status: 'error', probability: null, evaluationError: decision.reason?.message || 'Falha na avaliação' };
+    if (decision.status === 'rejected') return { ...video, status: 'error', probability: null, evaluationError: decision.reason?.message || 'Evaluation failed' };
     return { ...video, status: decision.value.accepted ? 'approved' : 'rejected', probability: decision.value.probability, evaluationError: '' };
   }));
-  if (unique.length > candidates.length) warnings.push(`${unique.length - candidates.length} vídeo(s) ficaram fora do limite de avaliação configurado.`);
+  if (unique.length > candidates.length) warnings.push(`${unique.length - candidates.length} video(s) fell outside the configured evaluation limit.`);
   const evalErrors = evaluated.filter(video => video.status === 'error');
   if (evalErrors.length) {
     const reason = evalErrors[0]?.evaluationError ? `: ${evalErrors[0].evaluationError}` : '';
-    warnings.push(`${evalErrors.length} vídeo(s) não puderam ser avaliados${reason}; revise os resultados.`);
+    warnings.push(`${evalErrors.length} video(s) could not be evaluated${reason}; review the results.`);
   }
   onProgress({ phase: 'done', completed: evaluated.length, total: evaluated.length });
   return { topic: cleanTopic, terms, videos: evaluated, warnings, discoveredCount: discovered.length, discoveredIds };

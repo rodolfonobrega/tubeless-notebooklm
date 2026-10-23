@@ -1,7 +1,7 @@
 import { normalizeSettings, parseLanguages, parseNotebookUrl } from './core/search.js';
 import { LLM_PRESETS, EVALUATION_PRESETS, requiredApiOrigins, sanitizeError, maskSecretKey } from './core/connections.js';
 import { testConnections } from './core/diagnostics.js';
-import { ModelCatalog, modelsForConnection } from './core/models.js';
+import { ModelCatalog, modelsForConnection, inferEvaluationProtocol } from './core/models.js';
 
 const fields = ['llmBaseUrl', 'llmApiKey', 'expansionModel', 'evaluationBaseUrl', 'evaluationApiKey', 'evaluationProtocol', 'jevModel', 'youtubeMode', 'youtubeKey', 'languages', 'termsPerLanguage', 'resultsPerTerm', 'maxEvaluations', 'evaluationConcurrency', 'threshold', 'captionedOnly'];
 const $ = id => document.getElementById(id);
@@ -9,8 +9,43 @@ const $ = id => document.getElementById(id);
 export function requestApiPermissions(settings) {
   // Call directly from a user click, before other asynchronous work.
   return chrome.permissions.request({ origins: requiredApiOrigins(settings) }).then(granted => {
-    if (!granted) throw new Error('Permita o acesso aos provedores escolhidos para continuar.');
+    if (!granted) throw new Error('Allow access to the chosen providers to continue.');
   });
+}
+
+// A check is skipped when the settings it depends on are the same as in its last successful test.
+// Keys go into the fingerprint only as a SHA-256 digest, never as plain text.
+const VERIFIED_KEY = 'verifiedConnections';
+
+async function fingerprint(...parts) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(parts)));
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function connectionFingerprints(settings) {
+  return {
+    llm: await fingerprint('llm', settings.llmBaseUrl, settings.expansionModel, settings.llmApiKey),
+    evaluation: await fingerprint('evaluation', settings.evaluationBaseUrl, settings.jevModel, settings.evaluationProtocol, settings.evaluationApiKey),
+    youtube: await fingerprint('youtube', settings.youtubeMode, settings.youtubeKey, settings.captionedOnly)
+  };
+}
+
+async function loadVerifiedChecks(settings) {
+  const stored = (await chrome.storage.local.get(VERIFIED_KEY).catch(() => ({})))[VERIFIED_KEY] || {};
+  const current = await connectionFingerprints(settings);
+  return Object.fromEntries(Object.entries(current).filter(([id, value]) => stored[id]?.fingerprint === value).map(([id]) => [id, stored[id]]));
+}
+
+// Only successful checks are remembered. A failed check is tested again next time.
+async function saveVerifiedChecks(settings, results) {
+  const verified = {};
+  for (const result of results) {
+    if (result.status !== 'ok') continue;
+    const tested = { ...settings };
+    if (result.id === 'evaluation' && result.protocol) tested.evaluationProtocol = result.protocol;
+    verified[result.id] = { fingerprint: (await connectionFingerprints(tested))[result.id], protocol: result.protocol ?? null };
+  }
+  await chrome.storage.local.set({ [VERIFIED_KEY]: verified }).catch(() => {});
 }
 
 export class SettingsPanel {
@@ -42,11 +77,11 @@ export class SettingsPanel {
 
   read() {
     const raw = Object.fromEntries(fields.filter(field => $(field)).map(field => [field, $(field).type === 'checkbox' ? $(field).checked : $(field).value]));
-    if (raw.notebookUrl && !parseNotebookUrl(raw.notebookUrl)) throw new Error('Cole o link de um notebook, terminado em /notebook/ID.');
-    if (!parseLanguages(raw.languages).length) throw new Error('Informe pelo menos um idioma válido, como pt,en.');
-    if (!raw.llmBaseUrl.trim() || !raw.evaluationBaseUrl.trim()) throw new Error('Informe a URL base de cada conexão.');
-    if (!raw.expansionModel.trim() || /(^|\/)jev(?:-|$)/i.test(raw.expansionModel.trim())) throw new Error('Informe um modelo de chat para gerar buscas.');
-    if (!raw.jevModel.trim()) throw new Error('Informe o modelo de avaliação.');
+    if (raw.notebookUrl && !parseNotebookUrl(raw.notebookUrl)) throw new Error('Paste a notebook link ending in /notebook/ID.');
+    if (!parseLanguages(raw.languages).length) throw new Error('Enter at least one valid language, such as pt,en.');
+    if (!raw.llmBaseUrl.trim() || !raw.evaluationBaseUrl.trim()) throw new Error('Enter the base URL of each connection.');
+    if (!raw.expansionModel.trim() || /(^|\/)jev(?:-|$)/i.test(raw.expansionModel.trim())) throw new Error('Enter a chat model to generate searches.');
+    if (!raw.jevModel.trim()) throw new Error('Enter the evaluation model.');
     return normalizeSettings(raw);
   }
 
@@ -77,19 +112,19 @@ export class SettingsPanel {
 
   async loadModels() {
     try { await this.models.load(); this.syncModels(); }
-    catch { $('catalogStatus').textContent = 'Você pode digitar o nome do modelo.'; }
+    catch { $('catalogStatus').textContent = 'You can type the model name.'; }
     if (this.models.needsRefresh) await this.refreshModels();
   }
 
   async refreshModels() {
     $('refreshModels').disabled = true;
-    $('catalogStatus').textContent = 'Atualizando lista…';
+    $('catalogStatus').textContent = 'Refreshing list…';
     try {
       await this.models.refresh();
       this.syncModels();
-      $('catalogStatus').textContent = 'Lista atualizada.';
+      $('catalogStatus').textContent = 'List updated.';
     } catch {
-      $('catalogStatus').textContent = this.models.catalog ? 'Usando lista salva. Tente atualizar depois.' : 'Não foi possível carregar a lista. Digite o nome do modelo.';
+      $('catalogStatus').textContent = this.models.catalog ? 'Using saved list. Try refreshing later.' : 'Could not load the list. Type the model name.';
     } finally { $('refreshModels').disabled = false; }
   }
 
@@ -112,6 +147,14 @@ export class SettingsPanel {
     this.clearResults();
   }
 
+  // A model from the catalog fixes its call format, so the user does not have to pick it.
+  syncProtocolFromCatalog() {
+    const protocol = inferEvaluationProtocol(this.models.catalog, $('evaluationBaseUrl').value, $('jevModel').value);
+    if (!protocol || $('evaluationProtocol').value === protocol) return;
+    $('evaluationProtocol').value = protocol;
+    this.syncPresets();
+  }
+
   clearResults() {
     if (this.controller) return;
     this.results.clear();
@@ -128,7 +171,7 @@ export class SettingsPanel {
       const row = document.createElement('div');
       row.className = `connection-result ${entry.status}`;
       const heading = document.createElement('strong');
-      const label = { testing: 'Testando…', ok: 'OK', error: 'Falhou', cancelled: 'Cancelado' }[entry.status];
+      const label = { testing: 'Testing…', ok: 'OK', error: 'Failed', cancelled: 'Cancelled' }[entry.status];
       heading.textContent = `${entry.title} · ${label}`;
       const message = document.createElement('p');
       message.textContent = entry.message;
@@ -148,15 +191,23 @@ export class SettingsPanel {
       const signal = this.controller.signal;
       this.results.clear();
       $('settingsError').classList.add('hidden');
-      $('testConnections').textContent = 'Cancelar teste';
+      $('testConnections').textContent = 'Cancel test';
       $('settingsForm').querySelectorAll('input, select, button').forEach(input => { if (input.id !== 'testConnections') input.disabled = true; });
       await permission;
       signal.throwIfAborted();
-      await testConnections(settings, { signal, onResult: result => this.renderResult(result) });
+      const skip = await loadVerifiedChecks(settings);
+      const results = await testConnections(settings, { signal, skip, onResult: result => this.renderResult(result) });
+      await saveVerifiedChecks(settings, results);
+      // The test may find that another call format works for a custom model. Apply it; the user still saves.
+      const protocol = results.find(result => result.id === 'evaluation')?.protocol;
+      if (protocol && protocol !== settings.evaluationProtocol) {
+        $('evaluationProtocol').value = protocol;
+        this.syncPresets();
+      }
       $('connectionResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (error) {
       if (this.controller?.signal.aborted) {
-        for (const result of this.results.values()) if (result.status === 'testing') this.renderResult({ ...result, status: 'cancelled', message: 'Teste cancelado.' });
+        for (const result of this.results.values()) if (result.status === 'testing') this.renderResult({ ...result, status: 'cancelled', message: 'Test cancelled.' });
       } else {
         $('settingsError').textContent = sanitizeError(error.message, [settings?.llmApiKey, settings?.evaluationApiKey, settings?.youtubeKey]);
         $('settingsError').classList.remove('hidden');
@@ -164,7 +215,7 @@ export class SettingsPanel {
     } finally {
       this.controller = null;
       $('settingsForm').querySelectorAll('input, select, button').forEach(input => { input.disabled = false; });
-      $('testConnections').textContent = 'Testar conexões';
+      $('testConnections').textContent = 'Test connections';
     }
   }
 
@@ -177,10 +228,12 @@ export class SettingsPanel {
       choice.addEventListener('change', () => {
         if (choice.value) input.value = choice.value;
         else input.focus();
+        if (kind === 'evaluation') this.syncProtocolFromCatalog();
         this.clearResults();
       });
       input.addEventListener('input', () => {
         choice.value = [...choice.options].some(option => option.value === input.value) ? input.value : '';
+        if (kind === 'evaluation') this.syncProtocolFromCatalog();
       });
     }
     $('llmPreset').addEventListener('change', () => this.applyPreset('llm', $('llmPreset').value));
@@ -217,11 +270,11 @@ export class SettingsPanel {
           preview.textContent = maskSecretKey(input.value);
           preview.classList.remove('hidden');
           button.classList.add('active');
-          button.setAttribute('aria-label', 'Ocultar conferência da chave');
+          button.setAttribute('aria-label', 'Hide key check');
         } else {
           preview.classList.add('hidden');
           button.classList.remove('active');
-          button.setAttribute('aria-label', 'Verificar início e fim da chave');
+          button.setAttribute('aria-label', 'Check the start and end of the key');
         }
       });
     });

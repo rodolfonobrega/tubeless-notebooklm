@@ -7,7 +7,7 @@ export function createHistoryId() {
 export function formatSearchDate(date = new Date()) {
   try {
     const d = typeof date === 'number' || typeof date === 'string' ? new Date(date) : date;
-    return new Intl.DateTimeFormat('pt-BR', {
+    return new Intl.DateTimeFormat('en-US', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -15,12 +15,12 @@ export function formatSearchDate(date = new Date()) {
       minute: '2-digit'
     }).format(d);
   } catch {
-    return new Date().toLocaleDateString('pt-BR');
+    return new Date().toLocaleDateString('en-US');
   }
 }
 
 export function createHistoryEntry(result, selectedVideoIds = []) {
-  if (!result || !result.topic) throw new Error('Resultado inválido para salvar no histórico.');
+  if (!result || !result.topic) throw new Error('Invalid result to save to history.');
   const id = result.historyId || createHistoryId();
   const selected = Array.isArray(selectedVideoIds) ? selectedVideoIds : Array.from(selectedVideoIds || []);
   const now = Date.now();

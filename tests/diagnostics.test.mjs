@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { testConnections } from '../core/diagnostics.js';
 import { normalizeSettings } from '../core/search.js';
 
-test('botão testa chamadas completas e mantém resultados independentes das falhas', async () => {
+test('the button tests full calls and keeps results independent of failures', async () => {
   const settings = normalizeSettings({ llmApiKey: 'generator', evaluationApiKey: 'judge', youtubeMode: 'api', youtubeKey: 'youtube' });
   const updates = [];
   const calls = [];
@@ -21,7 +21,7 @@ test('botão testa chamadas completas e mantém resultados independentes das fal
   assert.equal(results[1].message.includes('judge'), false);
 });
 
-test('teste não aceita resposta vazia nem transforma ausência de chave em sucesso', async () => {
+test('the test does not accept an empty response or turn a missing key into success', async () => {
   const results = await testConnections(normalizeSettings({ llmApiKey: 'llm', youtubeMode: 'api' }), { fetchImpl: async () => ({ ok: true, json: async () => ({}) }) });
   assert.deepEqual(results.map(result => result.status), ['error', 'error', 'error']);
 });

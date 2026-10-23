@@ -2,7 +2,7 @@ export const LLM_PRESETS = Object.freeze({
   openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-5-mini' },
   groq: { baseUrl: 'https://api.groq.com/openai/v1', model: 'openai/gpt-oss-120b' },
   deepseek: { baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
-  openrouter: { baseUrl: 'https://openrouter.ai/api/v1', model: 'google/gemini-2.5-flash' }
+  openrouter: { baseUrl: 'https://openrouter.ai/api/v1', model: 'nvidia/nemotron-3-ultra-550b-a55b:free' }
 });
 
 export const EVALUATION_PRESETS = Object.freeze({
@@ -16,12 +16,12 @@ export const EVALUATION_PRESETS = Object.freeze({
 export function normalizeBaseUrl(input) {
   let url;
   try { url = new URL(String(input || '').trim()); }
-  catch { throw new Error('Informe uma URL base válida.'); }
+  catch { throw new Error('Enter a valid base URL.'); }
   if (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname))) {
-    throw new Error('Use HTTPS ou um endereço local em localhost/127.0.0.1.');
+    throw new Error('Use HTTPS or a local address on localhost/127.0.0.1.');
   }
-  if (url.username || url.password) throw new Error('A URL base não pode conter credenciais.');
-  if (url.search || url.hash) throw new Error('A URL base não pode conter parâmetros ou fragmentos.');
+  if (url.username || url.password) throw new Error('The base URL cannot contain credentials.');
+  if (url.search || url.hash) throw new Error('The base URL cannot contain query parameters or fragments.');
   return url.toString().replace(/\/+$/, '');
 }
 
@@ -41,15 +41,15 @@ export function requiredApiOrigins(settings) {
 }
 
 export function sanitizeError(message, secrets = []) {
-  let text = String(message || 'Não foi possível completar a chamada.');
-  for (const secret of secrets) if (secret) text = text.split(secret).join('[oculto]');
-  return text.replace(/\b(?:sk-(?:or-v1-|proj-)?|gsk_)[a-zA-Z0-9_-]{12,}\b/g, '[oculto]').slice(0, 400);
+  let text = String(message || 'The request could not be completed.');
+  for (const secret of secrets) if (secret) text = text.split(secret).join('[hidden]');
+  return text.replace(/\b(?:sk-(?:or-v1-|proj-)?|gsk_)[a-zA-Z0-9_-]{12,}\b/g, '[hidden]').slice(0, 400);
 }
 
 export function maskSecretKey(key) {
   if (typeof key !== 'string') return '';
   const trimmed = key.trim();
-  if (!trimmed) return 'Nenhuma chave configurada';
+  if (!trimmed) return 'No key configured';
   if (trimmed.length <= 8) {
     return `${trimmed.slice(0, 2)}••••${trimmed.slice(-2)}`;
   }

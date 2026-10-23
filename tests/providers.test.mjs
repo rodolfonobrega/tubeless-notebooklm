@@ -5,7 +5,7 @@ import { expandQueries, searchYouTube, enrichYouTube, assessVideo, checkRecencyC
 const ok = value => ({ ok: true, json: async () => value });
 const settings = { openRouterKey: 'test-key', youtubeKey: 'test-yt', expansionModel: 'google/gemini-2.5-flash', jevModel: 'typesafe/jev-1.13', languageList: ['pt', 'en'], termsPerLanguage: 2, resultsPerTerm: 8, captionedOnly: true, threshold: 0.7 };
 
-test('expansão usa chat completions e interpreta JSON com cerca', async () => {
+test('search generation uses chat completions and parses fenced JSON', async () => {
   const calls = [];
   const terms = await expandQueries('energia', settings, async (url, options) => {
     calls.push({ url, body: JSON.parse(options.body) });
@@ -16,7 +16,7 @@ test('expansão usa chat completions e interpreta JSON com cerca', async () => {
   assert.deepEqual(terms, [{ language: 'pt', query: 'energia solar' }, { language: 'en', query: 'solar power' }]);
 });
 
-test('busca YouTube restringe tipo, idioma e legendas; detalhes trazem descrição completa', async () => {
+test('YouTube search limits type, language and captions; details include the full description', async () => {
   let searchUrl;
   const candidates = await searchYouTube({ language: 'pt', query: 'energia' }, settings, async url => {
     searchUrl = new URL(url);
@@ -31,7 +31,7 @@ test('busca YouTube restringe tipo, idioma e legendas; detalhes trazem descriç�
   assert.equal(enriched[0].url, 'https://www.youtube.com/watch?v=abc12345678');
 });
 
-test('Jev usa endpoint Decisions e resposta inválida falha fechada', async () => {
+test('Jev uses the Decisions endpoint and an invalid response fails closed', async () => {
   let body;
   const video = { title: 'Solar', description: 'Tudo sobre painéis' };
   const decision = await assessVideo('energia', video, settings, async (url, options) => {
@@ -41,34 +41,34 @@ test('Jev usa endpoint Decisions e resposta inválida falha fechada', async () =
   });
   assert.equal(body.model, settings.jevModel);
   assert.equal(decision.accepted, true);
-  await assert.rejects(assessVideo('energia', video, settings, async () => ok({ answers: {} })), /inválida/);
+  await assert.rejects(assessVideo('energia', video, settings, async () => ok({ answers: {} })), /invalid/);
 });
 
-test('API YouTube não segue redirecionamentos e remove a chave de mensagens de erro', async () => {
+test('YouTube API does not follow redirects and removes the key from error messages', async () => {
   await assert.rejects(searchYouTube({ language: 'pt', query: 'energia' }, settings, async (_url, options) => {
     assert.equal(options.redirect, 'error');
     assert.equal(options.credentials, 'omit');
     assert.ok(options.signal);
     return { ok: false, status: 403, json: async () => ({ error: { message: `Invalid key ${settings.youtubeKey}` } }) };
-  }), error => error.message.includes('[oculto]') && !error.message.includes(settings.youtubeKey));
+  }), error => error.message.includes('[hidden]') && !error.message.includes(settings.youtubeKey));
 });
 
-test('expansão da continuação orienta novos ângulos e informa termos já usados', async () => {
+test('continuation generation asks for new angles and reports terms already used', async () => {
   await expandQueries('energia', settings, async (_url, options) => {
     const prompt = JSON.parse(options.body).messages[0].content;
-    assert.match(prompt, /não repita/i);
+    assert.match(prompt, /do not repeat/i);
     assert.match(prompt, /solar residencial/);
     assert.match(prompt, /2/);
     return ok({ choices: [{ message: { content: '{"pt":["armazenamento"],"en":["solar storage"]}' } }] });
   }, undefined, { previousTerms: [{ language: 'pt', query: 'solar residencial' }], round: 2 });
 });
 
-test('termos antigos retornados pelo modelo não consomem o limite de consultas novas', async () => {
+test('old terms returned by the model do not use up the new-query limit', async () => {
   const terms = await expandQueries('energia', { ...settings, termsPerLanguage: 1 }, async () => ok({ choices: [{ message: { content: '{"pt":["antigo","novo"],"en":["old","new"]}' } }] }), undefined, { previousTerms: [{ language: 'pt', query: 'antigo' }, { language: 'en', query: 'old' }], round: 2 });
   assert.deepEqual(terms.map(term => term.query), ['novo', 'new']);
 });
 
-test('restrição de recência penaliza e rejeita vídeos de anos anteriores quando solicitados recentes', async () => {
+test('recency constraint penalizes and rejects older videos when recent ones are requested', async () => {
   const recentTopic = 'Engenharia reversa com LLM, considere apenas vídeos recentes';
   const normalTopic = 'Curso de SketchUp iniciante';
   const oldVideo = { title: 'Reverse engineering with GPT-4', description: 'Decompiling binaries', publishedAt: '2023-04-10T12:00:00Z' };

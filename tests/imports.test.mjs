@@ -6,7 +6,7 @@ const videos = [{ id: 'abc12345678', title: 'A' }, { id: 'def12345678', title: '
 const urlA = 'https://notebook.google.com/notebook/aaa';
 const urlB = 'https://notebook.google.com/notebook/bbb';
 
-test('lote registra confirmação individual e mantém itens sem resposta para revisão', () => {
+test('batch records individual confirmation and keeps unanswered items for review', () => {
   const queue = buildImportQueue('tema', videos, urlA);
   const partial = recordBatchImportOutcome(queue, { status: 'batch', outcomes: [{ id: videos[0].id, status: 'imported' }, { id: 'foraDaFila', status: 'imported' }] });
   assert.deepEqual(partial.completed, [videos[0].id]);
@@ -17,7 +17,7 @@ test('lote registra confirmação individual e mantém itens sem resposta para r
   assert.deepEqual(completed.failures, []);
 });
 
-test('resposta conflitante ou perdida não confirma nem libera reenvio automático', () => {
+test('a conflicting or lost response neither confirms nor releases an automatic resend', () => {
   const queue = buildImportQueue('tema', videos, urlA);
   const conflicting = recordBatchImportOutcome(queue, { status: 'batch', outcomes: [{ id: videos[0].id, status: 'imported' }, { id: videos[0].id, status: 'error' }] });
   assert.deepEqual(conflicting.completed, []);
@@ -25,7 +25,7 @@ test('resposta conflitante ou perdida não confirma nem libera reenvio automáti
   assert.ok(recordBatchImportOutcome(queue, null).failures.every(item => item.status === 'uncertain'));
 });
 
-test('erro anterior à submissão mantém o motivo de layout em todos os itens do lote', () => {
+test('an error before submission keeps the layout reason on every batch item', () => {
   const queue = buildImportQueue('tema', videos, urlA);
   const failed = recordBatchImportOutcome(queue, { status: 'error', reason: 'layout', message: 'Controle ausente' });
   assert.deepEqual(failed.completed, []);
@@ -33,7 +33,7 @@ test('erro anterior à submissão mantém o motivo de layout em todos os itens d
   assert.ok(failed.failures.every(item => item.reason === 'layout'));
 });
 
-test('fila fixa o notebook e só retoma no mesmo destino', () => {
+test('queue pins the notebook and only resumes at the same destination', () => {
   const original = buildImportQueue('tema', videos, urlA);
   const after = recordImportOutcome(original, 'abc12345678', { status: 'imported' });
   const resumed = buildImportQueue('tema', videos, urlA, after);
@@ -44,7 +44,7 @@ test('fila fixa o notebook e só retoma no mesmo destino', () => {
   assert.equal(findNotebookTab([{ id: 2, url: urlB }, { id: 1, url: urlA }], resumed)?.id, 1);
 });
 
-test('falha individual mantém outros vídeos pendentes', () => {
+test('an individual failure keeps other videos pending', () => {
   const queue = buildImportQueue('tema', videos, urlA);
   const failed = recordImportOutcome(queue, 'abc12345678', { status: 'error', message: 'recusado' });
   const next = recordImportOutcome(failed, 'def12345678', { status: 'imported' });
@@ -52,7 +52,7 @@ test('falha individual mantém outros vídeos pendentes', () => {
   assert.deepEqual(next.failures, [{ id: 'abc12345678', status: 'error', message: 'recusado' }]);
 });
 
-test('fonte incerta pode ser confirmada manualmente após verificação no notebook', () => {
+test('an uncertain source can be confirmed manually after checking the notebook', () => {
   const queue = buildImportQueue('tema', videos, urlA);
   const uncertain = recordImportOutcome(queue, 'abc12345678', { status: 'uncertain', message: 'sem confirmação' });
   const confirmed = markImportConfirmed(uncertain, 'abc12345678');
@@ -61,13 +61,13 @@ test('fonte incerta pode ser confirmada manualmente após verificação no noteb
   assert.throws(() => markImportConfirmed(queue, 'def12345678'));
 });
 
-test('resposta incerta pausa a fila para evitar atribuir uma fonte tardia a outro vídeo', () => {
+test('an uncertain response pauses the queue to avoid assigning a late source to another video', () => {
   assert.equal(shouldPauseImport({ status: 'uncertain' }), true);
   assert.equal(shouldPauseImport({ status: 'error' }), false);
   assert.equal(shouldPauseImport({ status: 'imported' }), false);
 });
 
-test('erro de layout pausa sem repetir a mesma falha em todos os vídeos da fila', () => {
+test('a layout error pauses without repeating the same failure on every queued video', () => {
   assert.equal(shouldPauseImport({ status: 'error', reason: 'layout' }), true);
   const queue = buildImportQueue('tema', [{ id: 'abc12345678' }, { id: 'def12345678' }], 'https://notebook.google.com/notebook/demo');
   const result = recordImportOutcome(queue, 'abc12345678', { status: 'error', reason: 'layout', message: 'Controle ausente' });

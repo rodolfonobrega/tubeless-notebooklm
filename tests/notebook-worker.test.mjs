@@ -8,7 +8,7 @@ function apiFixture(allowed = true) {
   return { store, api: { runtime: { id: 'extension' }, permissions: { async contains() { return allowed; } }, storage: { local: { async get(key) { return { [key]: store[key] }; }, async set(values) { Object.assign(store, values); } } } } };
 }
 
-test('proxy de localização não entrega credenciais e nega origens ou permissões inválidas', async () => {
+test('the location proxy does not deliver credentials and denies invalid origins or permissions', async () => {
   const { api } = apiFixture();
   let called = 0;
   const handle = createNotebookLocatorHandler(api, async (action, candidates, settings) => { called++; assert.equal(settings.evaluationApiKey, 'fake-evaluator'); return candidates[0].id; });
@@ -19,7 +19,7 @@ test('proxy de localização não entrega credenciais e nega origens ou permiss�
   assert.equal(called, 1);
 });
 
-test('cache persiste somente descritores e mantém escopo por domínio e idioma', async () => {
+test('cache stores only descriptors and keeps scope per domain and language', async () => {
   const { api, store } = apiFixture();
   const handle = createNotebookLocatorHandler(api);
   const put = { type: 'TUBELESS_LOCATOR_CACHE', op: 'put', locale: 'pt-BR', entries: { submit: { tag: 'button', kind: 'button', label: 'Finalizar', value: 'PRIVATE', selector: 'body', apiKey: 'PRIVATE' } } };
@@ -33,7 +33,7 @@ test('cache persiste somente descritores e mantém escopo por domínio e idioma'
   assert.deepEqual((await handle(get, { ...sender, url: 'https://notebook.google.com/notebook/abc123' })).cache, {});
 });
 
-test('erros do provedor nunca retornam as chaves ao conteúdo', async () => {
+test('provider errors never return the keys to the content', async () => {
   const { api } = apiFixture();
   const handle = createNotebookLocatorHandler(api, async () => { throw new Error('fake-evaluator fake-generator'); });
   const result = await handle({ type: 'TUBELESS_LOCATE_ELEMENT', action: 'submit', candidates: [{ id: 'e0', tag: 'button', kind: 'button', label: 'Adicionar' }] }, sender);

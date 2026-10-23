@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "TubeLess para NotebookLM",
-  "version": "1.4.2",
-  "description": "Pesquise vídeos e adicione os selecionados ao seu notebook.",
+  "name": "TubeLess for NotebookLM",
+  "version": "1.5.0",
+  "description": "Search for videos and add the selected ones to your notebook.",
   "minimum_chrome_version": "116",
   "icons": { "16": "assets/icon-16.png", "32": "assets/icon-32.png", "48": "assets/icon-48.png", "128": "assets/icon-128.png" },
   "permissions": ["storage", "tabs", "sidePanel", "clipboardWrite", "scripting"],
@@ -22,7 +22,7 @@
   ],
   "optional_host_permissions": ["https://*/*", "http://localhost/*", "http://127.0.0.1/*"],
   "background": { "service_worker": "background.js", "type": "module" },
-  "action": { "default_title": "Abrir TubeLess", "default_icon": { "16": "assets/icon-16.png", "32": "assets/icon-32.png" } },
+  "action": { "default_title": "Open TubeLess", "default_icon": { "16": "assets/icon-16.png", "32": "assets/icon-32.png" } },
   "side_panel": { "default_path": "panel.html" },
   "content_scripts": [
     {

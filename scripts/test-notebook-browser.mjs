@@ -67,7 +67,7 @@ try {
   assert.equal(await batch.evaluate(() => window.lastSubmitted), batchIds.map(id => `https://www.youtube.com/watch?v=${id}`).join('\n'));
   assert.deepEqual((await sendBatch(batch, batchIds)).outcomes.map(item => item.status), ['duplicate', 'duplicate', 'duplicate']);
   assert.equal(await batch.evaluate(() => window.submissions), 1);
-  console.log('OK: lote colado uma vez, cada fonte confirmada e duplicatas não reenviadas');
+  console.log('OK: batch pasted once, each source confirmed, and duplicates not resent');
   await batch.close();
 
   const largeBatch = await createPage();
@@ -94,7 +94,7 @@ try {
   });
   assert.ok((await sendBatch(websites, batchIds)).outcomes.every(item => item.status === 'imported'));
   assert.equal(await websites.evaluate(() => window.chosenType), 'links');
-  console.log('OK: lote prefere Sites/Links quando a opção YouTube também está disponível');
+  console.log('OK: batch prefers Websites/Links when the YouTube option is also available');
   await websites.close();
 
   const singleLine = await createPage();
@@ -113,7 +113,7 @@ try {
   assert.ok((await sendBatch(singleLine, batchIds)).outcomes.every(item => item.status === 'imported'));
   assert.equal(await singleLine.evaluate(() => window.lastSubmitted), batchIds.map(id => `https://www.youtube.com/watch?v=${id}`).join(' '));
   assert.equal(await singleLine.evaluate(() => window.submissions), 1);
-  console.log('OK: campo de uma linha recebe links separados por espaços em um único envio');
+  console.log('OK: single-line field receives links separated by spaces in a single send');
   await singleLine.close();
 
   const partial = await createPage();
@@ -142,7 +142,7 @@ try {
   assert.equal(await partial.locator('.source-item').count(), 3);
   assert.equal(await partial.evaluate(() => window.submissions), 2);
   assert.equal(await partial.evaluate(() => window.lastSubmitted), batchIds.slice(1).map(id => `https://www.youtube.com/watch?v=${id}`).join('\n'));
-  console.log('OK: lote parcial preserva confirmadas, exige revisão dos pendentes e retoma somente dois links');
+  console.log('OK: partial batch keeps confirmed items, requires review of pending ones, and resumes only two links');
   await partial.close();
 
   const wrongDestination = await createPage();
@@ -150,7 +150,7 @@ try {
   assert.equal(wrongResult.status, 'error');
   assert.equal(wrongResult.reason, 'layout');
   assert.equal(await wrongDestination.evaluate(() => window.submissions), 0);
-  console.log('OK: destino da mensagem diferente do notebook atual não abre nem submete formulário');
+  console.log('OK: message destination different from the current notebook neither opens nor submits a form');
   await wrongDestination.close();
 
   const titleOnly = await createPage();
@@ -167,7 +167,7 @@ try {
   assert.ok((await sendBatch(titleOnly, batchIds)).outcomes.every(item => item.status === 'imported'));
   assert.ok((await sendBatch(titleOnly, batchIds)).outcomes.every(item => item.status === 'duplicate'));
   assert.equal(await titleOnly.evaluate(() => window.submissions), 1);
-  console.log('OK: fontes com rótulos acessíveis sem URLs são confirmadas e não reenviadas na mesma página');
+  console.log('OK: sources with accessible labels and no URLs are confirmed and not resent on the same page');
   await titleOnly.close();
 
   const overlapping = await createPage();
@@ -181,7 +181,7 @@ try {
   const overlappingResult = await sendBatch(overlapping, batchIds.slice(0, 2), { titles: ['A & B', 'A &amp; B'] });
   assert.ok(overlappingResult.outcomes.every(item => item.status === 'uncertain'));
   assert.equal(await overlapping.evaluate(() => window.submissions), 1);
-  console.log('OK: títulos equivalentes não confirmam dois vídeos pela aparição de uma única fonte');
+  console.log('OK: equivalent titles do not confirm two videos from the appearance of one source');
   await overlapping.close();
 
   const page = await createPage();
@@ -189,7 +189,7 @@ try {
   assert.equal(await page.locator('.source-item').count(), 1);
   assert.equal(await page.evaluate(() => window.submissions), 1);
   assert.equal(await page.evaluate(() => window.locatorCalls.length), 0);
-  console.log('OK: nomes com ícones e botão habilitado após validação Angular');
+  console.log('OK: names with icons and button enabled after Angular validation');
   await page.close();
 
   const privateAdd = await createPage();
@@ -216,7 +216,7 @@ try {
   assert.equal(addRequest.action, 'add');
   assert.equal(JSON.stringify(addRequest).includes('PRIVATE_SOURCE'), false);
   assert.deepEqual(addRequest.candidates.map(candidate => candidate.label), ['Conectar material']);
-  console.log('OK: fallback Adicionar exclui fontes/listas privadas e preserva a barra legítima');
+  console.log('OK: Add fallback excludes private sources/lists and keeps the legitimate toolbar');
   await privateAdd.close();
 
   const dynamic = await createPage(true);
@@ -229,14 +229,14 @@ try {
   assert.equal(JSON.stringify(request).includes('value'), false);
   assert.equal((await send(dynamic, 'def12345678')).status, 'imported');
   assert.equal(await dynamic.evaluate(() => window.locatorCalls.length), 1);
-  console.log('OK: novo rótulo resolvido por ID, sem conteúdo privado, cache reutilizado');
+  console.log('OK: new label resolved by ID, without private content, cache reused');
   const cache = await dynamic.evaluate(() => window.savedCache);
   await dynamic.close();
 
   const stale = await createPage(false, cache);
   assert.equal((await send(stale, 'ghi12345678')).status, 'imported');
   assert.equal(await stale.evaluate(() => window.locatorCalls.length), 0);
-  console.log('OK: cache obsoleto rejeitado e rótulo atual localizado');
+  console.log('OK: stale cache rejected and current label located');
   await stale.close();
 
   const rejected = await createPage(true);
@@ -245,7 +245,7 @@ try {
   assert.equal(failure.status, 'error');
   assert.equal(failure.reason, 'layout');
   assert.equal(await rejected.evaluate(() => window.submissions), 0);
-  console.log('OK: resposta com seletor inventado não clica nem submete');
+  console.log('OK: response with an invented selector neither clicks nor submits');
   await rejected.close();
 
   const angular = await createPage();
@@ -262,7 +262,7 @@ try {
   });
   assert.equal((await send(angular, 'abc12345678')).status, 'imported');
   assert.equal(await angular.locator('.single-source-container').count(), 1);
-  console.log('OK: fonte Angular confirmada pelo rótulo acessível da linha');
+  console.log('OK: Angular source confirmed by the accessible label of its row');
   await angular.close();
 
   const delayed = await createPage();
@@ -281,6 +281,6 @@ try {
   await delayed.waitForSelector('.source-item');
   assert.equal((await send(delayed, 'abc12345678')).status, 'duplicate');
   assert.equal(await delayed.evaluate(() => window.submissions), 1);
-  console.log('OK: confirmação tardia bloqueia repetição e só libera com evidência real');
+  console.log('OK: late confirmation blocks repetition and is released only with real evidence');
   await delayed.close();
 } finally { await browser.close(); }

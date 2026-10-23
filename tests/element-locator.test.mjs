@@ -9,7 +9,7 @@ const candidates = [
 ];
 const settings = { evaluationBaseUrl: 'https://openrouter.ai/api/alpha', evaluationApiKey: 'fake-evaluator', evaluationProtocol: 'decisions', jevModel: 'typesafe/jev-1.13' };
 
-test('localizador usa Choice, somente IDs observados e a conexão independente de avaliação', async () => {
+test('locator uses Choice, only observed IDs, and the independent evaluation connection', async () => {
   assert.equal(typeof providers.selectNotebookElement, 'function');
   let request;
   const fetchImpl = async (url, options) => {
@@ -25,7 +25,7 @@ test('localizador usa Choice, somente IDs observados e a conexão independente d
   assert.equal(request.body.state.candidates[0].value, undefined);
 });
 
-test('localizador rejeita alvo inventado ou confiança baixa sem executar ações', async () => {
+test('locator rejects an invented target or low confidence without running actions', async () => {
   assert.equal(typeof providers.selectNotebookElement, 'function');
   for (const answer of [
     { type: 'choice', choice: '#invented', confidence: 1 },
@@ -37,7 +37,7 @@ test('localizador rejeita alvo inventado ou confiança baixa sem executar açõe
   }
 });
 
-test('localizador também usa formato OpenAI compatível com resposta estruturada validada', async () => {
+test('locator also uses an OpenAI-compatible format with a validated structured response', async () => {
   assert.equal(typeof providers.selectNotebookElement, 'function');
   let url;
   const result = await providers.selectNotebookElement('url', [{ id: 'e0', tag: 'input', kind: 'field', label: 'Cole o endereço' }], { ...settings, evaluationBaseUrl: 'https://api.groq.com/openai/v1', evaluationProtocol: 'chat', jevModel: 'openai/gpt-oss-120b' }, async (input, options) => {
@@ -49,7 +49,7 @@ test('localizador também usa formato OpenAI compatível com resposta estruturad
   assert.equal(url, 'https://api.groq.com/openai/v1/chat/completions');
 });
 
-test('dados de campos, HTML, URLs e propriedades extras não entram na observação nem no cache', () => {
+test('field data, HTML, URLs, and extra properties do not enter the observation or the cache', () => {
   const input = { id: 'e0', tag: 'input', kind: 'field', label: 'URL', value: 'PRIVATE NOTE', outerHTML: '<p>PRIVATE</p>', url: 'https://private', selector: 'body' };
   const sanitized = sanitizeCandidates('url', [input])[0];
   for (const field of ['value', 'outerHTML', 'url', 'selector']) assert.equal(sanitized[field], undefined);
@@ -59,7 +59,7 @@ test('dados de campos, HTML, URLs e propriedades extras não entram na observaç
   assert.throws(() => sanitizeCandidates('submit', [{ ...candidates[0], id: 'NONE' }]));
 });
 
-test('proxy só aceita conteúdo do frame principal de um notebook real na extensão', () => {
+test('proxy only accepts content from the main frame of a real notebook in the extension', () => {
   const sender = { id: 'ext123', frameId: 0, tab: { id: 1 }, url: 'https://notebooklm.google.com/notebook/abc123' };
   assert.equal(validNotebookSender(sender, 'ext123'), true);
   for (const change of [{ frameId: 1 }, { id: 'other' }, { tab: undefined }, { url: 'https://evil.example/notebook/abc123' }, { url: 'https://notebooklm.google.com/' }, { url: 'https://notebooklm.google.com.evil.example/notebook/a' }]) assert.equal(validNotebookSender({ ...sender, ...change }, 'ext123'), false);

@@ -6,7 +6,7 @@ import { expandQueries, assessVideo } from '../core/providers.js';
 
 const ok = data => ({ ok: true, json: async () => data });
 
-test('padrões usam OpenAI e busca sem chave, com avaliação independente', () => {
+test('defaults use OpenAI and keyless search, with independent evaluation', () => {
   const settings = normalizeSettings();
   assert.equal(settings.llmBaseUrl, 'https://api.openai.com/v1');
   assert.equal(settings.expansionModel, 'gpt-5-mini');
@@ -17,7 +17,7 @@ test('padrões usam OpenAI e busca sem chave, com avaliação independente', () 
   assert.equal(settings.jevModel, 'perplexity/pplx-decider-v1.1-27b');
 });
 
-test('migração mantém as duas chamadas OpenRouter e permite separar as chaves', () => {
+test('migration keeps both OpenRouter calls and lets the keys be separated', () => {
   const migrated = normalizeSettings({ openRouterKey: 'old-key', expansionModel: 'google/gemini-2.5-flash', youtubeKey: 'youtube-key' });
   assert.equal(migrated.llmBaseUrl, 'https://openrouter.ai/api/v1');
   assert.equal(migrated.llmApiKey, 'old-key');
@@ -29,18 +29,18 @@ test('migração mantém as duas chamadas OpenRouter e permite separar as chaves
   assert.equal(separate.llmApiKey, 'groq-key');
 });
 
-test('URLs aceitam provedores HTTPS e servidores locais, sem credenciais ou parâmetros', () => {
+test('URLs accept HTTPS providers and local servers, without credentials or parameters', () => {
   assert.equal(normalizeBaseUrl(' https://api.groq.com/openai/v1/// '), 'https://api.groq.com/openai/v1');
   assert.equal(normalizeBaseUrl('http://localhost:1234/v1'), 'http://localhost:1234/v1');
   assert.throws(() => normalizeBaseUrl('http://remote.example/v1'), /HTTPS/);
-  assert.throws(() => normalizeBaseUrl('https://user:pass@example.com/v1'), /credenciais/);
-  assert.throws(() => normalizeBaseUrl('https://example.com/v1?key=secret'), /parâmetros/);
+  assert.throws(() => normalizeBaseUrl('https://user:pass@example.com/v1'), /credentials/);
+  assert.throws(() => normalizeBaseUrl('https://example.com/v1?key=secret'), /parameters/);
   assert.equal(endpointUrl('https://example.com/v1/', 'chat/completions'), 'https://example.com/v1/chat/completions');
   assert.equal(endpointUrl('https://example.com/v1/chat/completions', 'chat/completions'), 'https://example.com/v1/chat/completions');
   assert.deepEqual(requiredApiOrigins({ ...DEFAULT_SETTINGS, llmBaseUrl: 'http://localhost:1234/v1' }), ['http://localhost/*', 'https://openrouter.ai/*']);
 });
 
-test('geração e avaliação enviam chaves apenas ao respectivo provedor', async () => {
+test('generation and evaluation send keys only to their own provider', async () => {
   const settings = normalizeSettings({ llmBaseUrl: 'https://api.groq.com/openai/v1', llmApiKey: 'generator-key', expansionModel: 'llama-3.3-70b-versatile', evaluationBaseUrl: 'https://api.typesafe.ai', evaluationApiKey: 'judge-key', evaluationProtocol: 'systemone', jevModel: 'jev-latest', languages: 'pt', termsPerLanguage: 1 });
   await expandQueries('energia', { ...settings, languageList: ['pt'] }, async (url, options) => {
     assert.equal(url, 'https://api.groq.com/openai/v1/chat/completions');
@@ -58,7 +58,7 @@ test('geração e avaliação enviam chaves apenas ao respectivo provedor', asyn
   assert.equal(decision.accepted, true);
 });
 
-test('provedor antigo de chat pode usar max_tokens e respostas inválidas falham', async () => {
+test('older chat providers can use max_tokens, and invalid responses fail', async () => {
   let count = 0;
   const settings = { ...DEFAULT_SETTINGS, llmApiKey: 'test', languageList: ['pt'] };
   const terms = await expandQueries('energia', settings, async (_url, options) => {
@@ -69,10 +69,10 @@ test('provedor antigo de chat pode usar max_tokens e respostas inválidas falham
     return ok({ choices: [{ message: { content: '{"pt":["solar"]}' } }] });
   });
   assert.equal(terms[0].query, 'solar');
-  await assert.rejects(expandQueries('energia', settings, async () => ok({ choices: [{ message: { content: '{}' } }] })), /termos/);
+  await assert.rejects(expandQueries('energia', settings, async () => ok({ choices: [{ message: { content: '{}' } }] })), /terms/);
 });
 
-test('avaliação também pode usar um provedor compatível com OpenAI', async () => {
+test('evaluation can also use an OpenAI-compatible provider', async () => {
   const settings = { ...DEFAULT_SETTINGS, evaluationBaseUrl: 'https://api.openai.com/v1', evaluationApiKey: 'judge-key', evaluationProtocol: 'chat', jevModel: 'gpt-5-mini' };
   const result = await assessVideo('energia', { title: 'Solar' }, settings, async (url, options) => {
     assert.equal(url, 'https://api.openai.com/v1/chat/completions');
@@ -80,17 +80,17 @@ test('avaliação também pode usar um provedor compatível com OpenAI', async (
     return ok({ choices: [{ message: { content: '{"probability":0.9}' } }] });
   });
   assert.equal(result.accepted, true);
-  await assert.rejects(assessVideo('energia', {}, settings, async () => ok({ choices: [{ message: { content: '{"probability":"0.9"}' } }] })), /inválida/);
+  await assert.rejects(assessVideo('energia', {}, settings, async () => ok({ choices: [{ message: { content: '{"probability":"0.9"}' } }] })), /invalid/);
 });
 
-test('erros visíveis removem credenciais mesmo se o provedor as repetir', () => {
-  assert.equal(sanitizeError('Token custom-key inválido', ['custom-key']), 'Token [oculto] inválido');
-  assert.equal(sanitizeError('sk-proj-123456789ABCDEFGHI inválido'), '[oculto] inválido');
+test('visible errors remove credentials even if the provider repeats them', () => {
+  assert.equal(sanitizeError('Token custom-key inválido', ['custom-key']), 'Token [hidden] inválido');
+  assert.equal(sanitizeError('sk-proj-123456789ABCDEFGHI inválido'), '[hidden] inválido');
 });
 
-test('maskSecretKey mascara chaves mantendo apenas início e fim sem expor o segredo', () => {
-  assert.equal(maskSecretKey(''), 'Nenhuma chave configurada');
-  assert.equal(maskSecretKey('   '), 'Nenhuma chave configurada');
+test('maskSecretKey masks keys, keeping only the start and end without exposing the secret', () => {
+  assert.equal(maskSecretKey(''), 'No key configured');
+  assert.equal(maskSecretKey('   '), 'No key configured');
   assert.equal(maskSecretKey(null), '');
   assert.equal(maskSecretKey('12345678'), '12••••78');
   assert.equal(maskSecretKey('1234567890123456'), '1234••••••••3456');

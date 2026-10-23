@@ -1,19 +1,19 @@
-# TubeLess para NotebookLM — desenho atual
+# TubeLess for NotebookLM — current design
 
-Objetivo: encontrar vídeos públicos para um tema com buscas variadas em vários idiomas, avaliar relevância e enviar os escolhidos como fontes a um notebook pessoal do NotebookLM. O RAG fica no produto Google.
+Goal: find public videos for a topic using varied searches in several languages, score their relevance, and send the chosen ones as sources to a personal NotebookLM notebook. RAG stays in the Google product.
 
-## Fluxo
+## Flow
 
-1. O painel lateral recebe tema, idiomas e parâmetros. Geração e avaliação têm URL, chave, protocolo e modelo independentes; YouTube não exige chave por padrão.
-2. Um modelo generativo compatível com OpenAI cria consultas por idioma dentro do limite configurado. Erro na expansão usa o tema original com aviso.
-3. A extensão lê páginas públicas do YouTube ou consulta a API oficial opcional, deduplica IDs e verifica detalhes e legendas. Nenhum HTML recebido é executado.
-4. Jev via Decisions/System One, ou um modelo Chat Completions, recebe tema, título, descrição completa, canal e data. Sua probabilidade de relevância decide o status e ordena os resultados. Falha ou resposta inválida nunca transforma vídeo em aprovado automaticamente.
-5. O usuário revisa os resultados e escolhe fontes. A extensão exige uma aba de notebook pessoal já aberta e autenticada, cola os links em lote pela interface, confirma cada fonte e registra os itens pendentes. Retomar envia apenas os links restantes após a revisão das fontes incertas. O destino é validado antes da espera e novamente no content script; não usa endpoints privados do Google.
+1. The side panel receives the topic, languages, and parameters. Generation and evaluation each have their own URL, key, protocol, and model; YouTube needs no key by default.
+2. A generative model compatible with OpenAI creates queries per language within the configured limit. A failure in expansion falls back to the original topic with a warning.
+3. The extension reads public YouTube pages or calls the optional official API, deduplicates IDs, and checks details and captions. No received HTML is executed.
+4. Jev through Decisions/System One, or a Chat Completions model, receives the topic, title, full description, channel, and date. Its relevance probability sets the status and sorts the results. A failure or invalid response never automatically turns a video into an approved one.
+5. The user reviews the results and picks sources. The extension requires a personal, signed-in notebook tab to be open, pastes the links in a batch through the interface, confirms each source, and records pending items. Resuming sends only the remaining links after the uncertain sources are reviewed. The destination is validated before waiting and again in the content script; no private Google endpoints are used.
 
-## Limites
+## Limits
 
-A importação usa a interface da aba autenticada; mudanças no NotebookLM podem exigir atualização do adaptador DOM. O avaliador só recebe texto dos metadados. Vídeos importáveis precisam atender às regras do Google. A busca pública pode ser bloqueada por consentimento, controles de robôs ou mudanças de layout. Chaves ficam no armazenamento local do Chrome, nunca no código ou em logs. O .env é usado somente pelos testes locais e não entra no pacote.
+Import uses the interface of the signed-in tab; changes in NotebookLM may require updating the DOM adapter. The evaluator only receives metadata text. Videos that can be imported must meet Google's rules. Public search can be blocked by consent pages, bot checks, or layout changes. Keys stay in Chrome's local storage, never in code or logs. The .env file is used only by local tests and is not part of the package.
 
-## Verificação
+## Verification
 
-Testes automatizados cobrem expansão, limites, deduplicação, contratos de avaliação, falhas parciais, legendas, ordenação e validação de URL. Chamadas reais e inspeção no Chrome foram executadas com as chaves autorizadas. Veja [verification.md](verification.md) para resultados e limites.
+Automated tests cover query expansion, limits, deduplication, evaluation contracts, partial failures, captions, ordering, and URL validation. Real calls and Chrome inspection were run with the authorized keys. See [verification.md](verification.md) for results and limits.
