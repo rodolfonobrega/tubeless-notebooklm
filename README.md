@@ -40,7 +40,7 @@ NotebookLM is excellent at answering questions about sources. TubeLess finds the
 
 ## Install in 60 seconds
 
-1. Download `TubeLess-1.6.0.zip` from the [latest release](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/latest) and extract it to a permanent folder.
+1. Download `TubeLess-1.6.1.zip` from the [latest release](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/latest) and extract it to a permanent folder.
 2. Open `chrome://extensions` in Google Chrome.
 3. Turn on **Developer mode** and click **Load unpacked**.
 4. Select the extracted folder that contains `manifest.json`.
