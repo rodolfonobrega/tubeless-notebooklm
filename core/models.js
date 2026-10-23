@@ -147,8 +147,9 @@ export class ModelCatalog {
   // Replaces the LiteLLM rows for OpenRouter. If the OpenRouter list fails, the LiteLLM rows stay.
   async addOpenRouterModels(catalog) {
     try {
-      const response = await this.fetchImpl(OPENROUTER_MODELS_URL, { credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(15000) });
-      const rows = parseOpenRouterModels(await readJson(response), this.now());
+      // The default list has text models only, so decision models are requested separately.
+      const pages = await Promise.all(['text', 'decisions'].map(async modality => readJson(await this.fetchImpl(`${OPENROUTER_MODELS_URL}?output_modalities=${modality}`, { credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(15000) }))));
+      const rows = parseOpenRouterModels({ data: pages.flatMap(page => page.data || []) }, this.now());
       const byKey = new Map(rows.map(row => [`${row.mode}:${row.id}`, row]));
       for (const id of CURATED_EVALUATION_MODELS.openrouter) {
         if (!byKey.has(`evaluation:${id}`)) byKey.set(`evaluation:${id}`, { id, mode: 'evaluation' });

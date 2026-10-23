@@ -94,3 +94,20 @@ test('fetch is called without binding this to the catalog instance', async () =>
   } });
   await service.refresh();
 });
+
+test('OpenRouter loads text models for generation and decision models for evaluation', async () => {
+  const requested = [];
+  const service = new ModelCatalog({ now: () => now, storage: { set: async () => {} }, fetchImpl: async url => {
+    const modality = new URL(url).searchParams.get('output_modalities');
+    if (modality) requested.push(modality);
+    if (!modality) return new Response(JSON.stringify(raw));
+    const data = modality === 'decisions'
+      ? [{ id: 'nace-ai/drex-v2.0', architecture: { output_modalities: ['decisions'] } }]
+      : [{ id: 'google/gemini-2.5-flash', architecture: { output_modalities: ['text'] } }];
+    return new Response(JSON.stringify({ data }));
+  } });
+  const catalog = await service.refresh();
+  assert.deepEqual(requested.sort(), ['decisions', 'text']);
+  assert.ok(modelsForConnection(catalog, 'https://openrouter.ai/api/alpha', 'decisions', now).includes('nace-ai/drex-v2.0'));
+  assert.ok(modelsForConnection(catalog, 'https://openrouter.ai/api/v1', 'chat', now).includes('google/gemini-2.5-flash'));
+});
