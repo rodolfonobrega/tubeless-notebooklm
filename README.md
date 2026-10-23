@@ -20,6 +20,11 @@ NotebookLM is excellent at answering questions about sources. TubeLess finds the
 
 ---
 
+## What's new in 1.8.0
+
+- **Smarter search queries.** The model first works out what you are trying to learn, then writes the queries the matching videos would be titled with. Conversational requests, product names you do not know, and limits such as free or recent are handled as intent, not as text to strip.
+- **Update check.** TubeLess looks for a newer release on GitHub once a day and shows a **Download update** button. The zip is saved to your Downloads folder. Extract it into the same folder, replacing the files, then reload TubeLess at chrome://extensions.
+
 ## What's new in 1.7.0
 
 - **Recent-video requests filter by date.** If your topic asks for recent videos (for example "latest" or "this year"), API searches only return videos from the last 18 months.
@@ -44,7 +49,7 @@ NotebookLM is excellent at answering questions about sources. TubeLess finds the
 
 ## Install in 60 seconds
 
-1. Download `TubeLess-1.7.0.zip` from the [latest release](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/latest) and extract it to a permanent folder.
+1. Download `TubeLess-1.8.0.zip` from the [latest release](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/latest) and extract it to a permanent folder.
 2. Open `chrome://extensions` in Google Chrome.
 3. Turn on **Developer mode** and click **Load unpacked**.
 4. Select the extracted folder that contains `manifest.json`.

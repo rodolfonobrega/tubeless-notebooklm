@@ -106,3 +106,13 @@ test('recent-video requests send a publishedAfter cutoff to the API search', asy
   await searchYouTube({ language: 'en', query: 'solar energy' }, { ...settings, youtubeMode: 'api', publishedAfter: cutoff }, async url => { searchUrl = new URL(url); return ok({ items: [] }); });
   assert.equal(searchUrl.searchParams.get('publishedAfter'), cutoff);
 });
+
+test('the generation prompt asks the model to understand the intent before writing queries', async () => {
+  await expandQueries('xyaniu', settings, async (_url, options) => {
+    const prompt = JSON.parse(options.body).messages[0].content;
+    assert.match(prompt, /Read the whole request/);
+    assert.match(prompt, /Picture the videos/);
+    assert.match(prompt, /instead of guessing what it is/);
+    return ok({ choices: [{ message: { content: '{"pt":["xyaniu tutorial"],"en":["xyaniu tutorial"]}' } }] });
+  });
+});

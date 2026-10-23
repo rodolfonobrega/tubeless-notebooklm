@@ -2,6 +2,7 @@ import { DEFAULT_SETTINGS, normalizeSettings, parseLanguages, parseNotebookUrl, 
 import { runDiscovery } from './core/pipeline.js';
 import { buildImportQueue, findNotebookTab, recordBatchImportOutcome, shouldPauseImport, markImportConfirmed } from './core/imports.js';
 import { SettingsPanel, requestApiPermissions } from './settings.js';
+import { checkForUpdate } from './core/update.js';
 import { sanitizeError } from './core/connections.js';
 import { mergeDiscoveryResults, selectionForResult, selectionAfterContinuation, selectedVideoLinks } from './core/continuation.js';
 import { createHistoryEntry, addHistoryEntry, removeHistoryEntry, findHistoryEntry } from './core/history.js';
@@ -615,6 +616,37 @@ async function init() {
   updateSetup();
   renderResults();
   installEvents();
+  checkUpdates().catch(() => { /* Offline or GitHub unavailable: the update notice stays hidden. */ });
 }
+
+// Checks GitHub at most once a day. The result is cached so the app does not hit the API on every open.
+const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000;
+let availableUpdate = null;
+
+async function checkUpdates() {
+  const currentVersion = chrome.runtime.getManifest().version;
+  const cached = (await chrome.storage.local.get('updateCheck')).updateCheck;
+  let asset = cached && Date.now() - cached.checkedAt < UPDATE_CHECK_INTERVAL ? cached.asset : undefined;
+  if (asset === undefined) {
+    asset = await checkForUpdate(currentVersion);
+    await chrome.storage.local.set({ updateCheck: { checkedAt: Date.now(), asset } });
+  }
+  if (!asset) return;
+  availableUpdate = asset;
+  $('updateTitle').textContent = `TubeLess ${asset.version} is available`;
+  $('updateDetail').textContent = `You have ${currentVersion}. Download the zip, extract it into this same folder (replacing the files), then reload TubeLess at chrome://extensions.`;
+  $('updateNotice').classList.remove('hidden');
+}
+
+async function downloadUpdate() {
+  try {
+    await chrome.downloads.download({ url: availableUpdate.url, filename: availableUpdate.name, saveAs: false });
+    showMessage(`Downloading ${availableUpdate.name} to your Downloads folder.`, true);
+  } catch (error) {
+    showMessage(`Could not start the download: ${error.message}`);
+  }
+}
+
+$('updateDownload').addEventListener('click', downloadUpdate);
 
 init().catch(error => showMessage(`Could not start the extension: ${error.message}`));
