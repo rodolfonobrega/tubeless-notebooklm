@@ -1,7 +1,7 @@
 import { normalizeSettings, parseLanguages, parseNotebookUrl } from './core/search.js';
 import { LLM_PRESETS, EVALUATION_PRESETS, requiredApiOrigins, sanitizeError, maskSecretKey } from './core/connections.js';
 import { testConnections } from './core/diagnostics.js';
-import { ModelCatalog, modelsForConnection, inferEvaluationProtocol } from './core/models.js';
+import { ModelCatalog, modelsForConnection, inferEvaluationProtocol, modelStatus } from './core/models.js';
 
 const fields = ['llmBaseUrl', 'llmApiKey', 'expansionModel', 'evaluationBaseUrl', 'evaluationApiKey', 'evaluationProtocol', 'jevModel', 'youtubeMode', 'youtubeKey', 'languages', 'termsPerLanguage', 'resultsPerTerm', 'maxEvaluations', 'evaluationConcurrency', 'threshold', 'captionedOnly'];
 const $ = id => document.getElementById(id);
@@ -98,7 +98,7 @@ export class SettingsPanel {
       const models = modelsForConnection(this.models.catalog, $(`${kind}BaseUrl`).value, kind === 'llm' ? 'chat' : $('evaluationProtocol').value);
       const custom = document.createElement('option');
       custom.value = '';
-      custom.textContent = 'Nome personalizado';
+      custom.textContent = 'Custom name';
       choice.replaceChildren(custom);
       for (const model of models) {
         const option = document.createElement('option');
@@ -107,7 +107,17 @@ export class SettingsPanel {
         choice.append(option);
       }
       choice.value = models.includes(input.value) ? input.value : '';
+      this.syncModelNotice(kind);
     }
+  }
+
+  // Tells the user when a model is no longer listed by a provider whose list is live, and suggests one that is.
+  syncModelNotice(kind) {
+    const input = $(kind === 'llm' ? 'expansionModel' : 'jevModel');
+    const notice = $(`${kind}ModelNotice`);
+    const status = modelStatus(this.models.catalog, $(`${kind}BaseUrl`).value, input.value.trim(), kind === 'llm' ? 'chat' : $('evaluationProtocol').value);
+    notice.classList.toggle('hidden', !status);
+    notice.textContent = status ? `"${input.value.trim()}" is no longer available from this provider. Consider switching to "${status.replacement}".` : '';
   }
 
   async loadModels() {

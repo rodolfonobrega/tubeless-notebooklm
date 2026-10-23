@@ -34,10 +34,10 @@ test('restore uses the saved selection, keeping manual choices even below the sc
 });
 
 test('an empty round keeps earlier videos and stores the terms tried', () => {
-  const merged = mergeDiscoveryResults(first, { topic: first.topic, terms: [{ language: 'en', query: 'renewable storage' }], videos: [], warnings: ['Nenhum vídeo novo'], discoveredIds: first.discoveredIds, discoveredCount: 3 });
+  const merged = mergeDiscoveryResults(first, { topic: first.topic, terms: [{ language: 'en', query: 'renewable storage' }], videos: [], warnings: ['No new videos'], discoveredIds: first.discoveredIds, discoveredCount: 3 });
   assert.equal(merged.videos.length, 3);
   assert.equal(merged.discoveredCount, 3);
   assert.deepEqual(merged.terms.map(term => term.query), ['solar residencial', 'renewable storage']);
-  assert.match(merged.warnings[0], /novo/);
+  assert.match(merged.warnings[0], /new/);
   assert.throws(() => mergeDiscoveryResults(first, { topic: 'outro', videos: [], terms: [] }), /same search topic/);
 });

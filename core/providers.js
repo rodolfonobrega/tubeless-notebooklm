@@ -3,13 +3,21 @@ import { endpointUrl, sanitizeError } from './connections.js';
 import { freshSearchTerms } from './continuation.js';
 import { buildElementDecision, readElementDecision, sanitizeCandidates } from './element-locator.js';
 
-async function readJson(response, service, secrets = []) {
+// A provider says a model is gone: HTTP 410, or a 400/404/422 whose message names the model as missing or retired.
+const MODEL_GONE = /model.*(not found|does not exist|no longer|decommissioned|deprecated|retired|not available|unavailable)|(not found|does not exist|no longer|decommissioned|retired).*model/i;
+const isModelGone = (status, message) => status === 410 || ([400, 404, 422].includes(status) && MODEL_GONE.test(message));
+
+async function readJson(response, service, secrets = [], model = '') {
   let data;
   try { data = await response.json(); } catch { throw new Error(`${service}: response is not valid JSON`); }
   if (!response.ok) {
     const message = data?.error?.message || data?.error?.errors?.[0]?.reason || response.statusText || `HTTP ${response.status}`;
     const error = new Error(sanitizeError(`${service}: ${message}`, secrets));
     error.status = response.status;
+    if (model && isModelGone(response.status, message)) {
+      error.code = 'MODEL_UNAVAILABLE';
+      error.message = sanitizeError(`${service}: the model "${model}" is no longer available from this provider. Choose another model in Settings.`, secrets);
+    }
     throw error;
   }
   return data;
@@ -34,7 +42,7 @@ async function requestJson(url, body, key, service, fetchImpl, signal) {
       headers: { ...(key ? { Authorization: `Bearer ${key}` } : {}), 'Content-Type': 'application/json' },
       body: JSON.stringify(body), signal: requestSignal, redirect: 'error', credentials: 'omit'
     });
-    return await readJson(response, service, [key]);
+    return await readJson(response, service, [key], body?.model);
   } catch (error) {
     if (signal?.aborted) throw signal.reason || error;
     if (timeout.aborted) throw new Error(`${service}: the call took too long (more than 60 seconds). Try again.`);

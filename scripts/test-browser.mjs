@@ -193,8 +193,8 @@ try {
       const target = body.state.candidates.find(candidate => candidate.label === 'Finalizar conexão');
       return route.fulfill({ json: { answers: { target: { type: 'choice', choice: target?.id || 'NONE', confidence: 0.99 } } } });
     }
-    const languages = body.messages?.[0]?.content.match(/para cada idioma: ([^.]+)\./)?.[1]?.split(', ') || ['pt', 'en'];
-    if (body.messages?.[0]?.content.startsWith('Tema de pesquisa no YouTube:')) discoveryLanguages.push(languages);
+    const languages = body.messages?.[0]?.content.match(/for each language: ([^.]+)\./)?.[1]?.split(', ') || ['pt', 'en'];
+    if (body.messages?.[0]?.content.startsWith('You are an expert in SEO and YouTube video search')) discoveryLanguages.push(languages);
     const data = route.request().url().endsWith('/decisions')
       ? { answers: { relevant: { type: 'noul', noul: [...samples, extraSample].find(video => video.title === body.state.video.title)?.probability ?? 0.9 } } }
       : { choices: [{ message: { content: JSON.stringify(Object.fromEntries(languages.map(language => [language, [continuationSearch ? `solar installation ${language}` : `solar energy ${language}`]]))) } }] };
@@ -329,7 +329,7 @@ try {
     await notebook.goto('https://notebook.google.com/notebook/fixture123');
     await panel.locator('#selectAll').click();
     await panel.locator('#importButton').click();
-    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('3 fonte(s) confirmada(s)'), null, { timeout: 15000 });
+    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('3 source(s) confirmed'), null, { timeout: 15000 });
     assert.equal(await notebook.locator('.source-item').count(), 3);
     assert.equal(await notebook.evaluate(() => window.submissions), 1);
     assert.equal(await panel.evaluate(async () => (await chrome.storage.local.get('importQueue')).importQueue), undefined);
@@ -360,14 +360,14 @@ try {
     assert.equal(partial.failures.length, 2);
     assert.equal(await panel.locator('#pendingResume').isDisabled(), true);
     assert.equal(await panel.locator('#importButton').isDisabled(), true);
-    assert.ok((await panel.locator('#pendingDetail').textContent()).includes('Fonte a revisar:'));
+    assert.ok((await panel.locator('#pendingDetail').textContent()).includes('Source to review:'));
     assert.ok((await panel.locator('#pendingDetail').textContent()).includes('Solar ampliação'));
     await panel.locator('#pendingRetry').click();
     await panel.waitForFunction(() => document.querySelector('#pendingDetail').textContent.includes('1 item(s) waiting for review'));
     await panel.locator('#pendingRetry').click();
     await panel.waitForFunction(() => document.querySelector('#pendingRetry').classList.contains('hidden'));
     await panel.locator('#pendingResume').click();
-    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('3 fonte(s) confirmada(s) no NotebookLM'));
+    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('3 source(s) confirmed no NotebookLM'));
     assert.equal(await notebook.locator('.source-item').count(), 3);
     assert.equal(await notebook.evaluate(() => window.submissions), 2);
     const urls = await notebook.locator('.source-item a').evaluateAll(links => links.map(link => link.href));
@@ -417,7 +417,7 @@ try {
       await panel.waitForFunction(async expected => (await chrome.storage.local.get('importQueue')).importQueue.failures.length === expected, remaining);
     }
     await panel.locator('#pendingResume').click();
-    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('3 fonte(s) confirmada(s) no NotebookLM'));
+    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('3 source(s) confirmed no NotebookLM'));
     assert.equal(await notebook.evaluate(() => window.submissions), 0);
     await notebook.close();
   });
@@ -427,7 +427,7 @@ try {
     await notebook.goto('https://notebook.google.com/notebook/dynamic123');
     await panel.locator('#selectAll').click();
     await panel.locator('#importButton').click();
-    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('3 fonte(s) confirmada(s)'), null, { timeout: 30000 });
+    await panel.waitForFunction(() => document.querySelector('#messageBox').textContent.includes('3 source(s) confirmed'), null, { timeout: 30000 });
     assert.equal(await notebook.locator('.source-item').count(), 3);
     assert.equal(await notebook.evaluate(() => window.submissions), 1);
     assert.equal(locatorCalls, 1);
@@ -485,7 +485,7 @@ try {
       assert.ok(counts.openrouter > 100);
       assert.ok(counts.groq > 1);
       assert.equal(await panel.locator('#expansionModel').inputValue(), previousModel);
-      console.log(`Modelos: ${JSON.stringify(counts)}`);
+      console.log(`Models: ${JSON.stringify(counts)}`);
       await panel.screenshot({ path: resolve(artifacts, 'models-live.png') });
     });
     await panel.locator('#settingsBack').click();

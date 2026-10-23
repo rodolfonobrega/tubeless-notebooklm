@@ -15,7 +15,7 @@ const packaged = [
   ...Object.values(manifest.action?.default_icon || {})
 ];
 for (const path of packaged) {
-  if (!path || !existsSync(resolve(root, path))) throw new Error(`Arquivo do manifest ausente: ${path}`);
+  if (!path || !existsSync(resolve(root, path))) throw new Error(`Manifest file missing: ${path}`);
 }
 function checkScripts(directory) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {

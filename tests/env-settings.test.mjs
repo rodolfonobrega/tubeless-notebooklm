@@ -17,7 +17,7 @@ test('an explicit evaluation key does not inherit the endpoint of another existi
   assert.equal(result.evaluationProtocol, 'decisions');
 });
 
-test('chave TypeSafe direta escolhe o endpoint, protocolo e modelo correspondentes', () => {
+test('a direct TypeSafe key picks the matching endpoint, protocol, and model', () => {
   const result = settingsFromEnv({ TYPESAFE_API_KEY: 'fake-typesafe', OPENROUTER_API_KEY: 'fake-router' });
   assert.equal(result.evaluationApiKey, 'fake-typesafe');
   assert.equal(result.evaluationBaseUrl, 'https://api.typesafe.ai');

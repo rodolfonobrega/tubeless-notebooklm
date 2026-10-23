@@ -54,7 +54,7 @@ test('an individual failure keeps other videos pending', () => {
 
 test('an uncertain source can be confirmed manually after checking the notebook', () => {
   const queue = buildImportQueue('tema', videos, urlA);
-  const uncertain = recordImportOutcome(queue, 'abc12345678', { status: 'uncertain', message: 'sem confirmação' });
+  const uncertain = recordImportOutcome(queue, 'abc12345678', { status: 'uncertain', message: 'no confirmation' });
   const confirmed = markImportConfirmed(uncertain, 'abc12345678');
   assert.deepEqual(confirmed.completed, ['abc12345678']);
   assert.deepEqual(confirmed.failures, []);

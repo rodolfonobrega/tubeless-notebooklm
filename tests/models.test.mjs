@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseModelCatalog, modelsForConnection, ModelCatalog } from '../core/models.js';
+import { parseModelCatalog, modelsForConnection, ModelCatalog, modelStatus } from '../core/models.js';
 
 const now = Date.parse('2026-10-02T12:00:00Z');
 const raw = {
@@ -110,4 +110,12 @@ test('OpenRouter loads text models for generation and decision models for evalua
   assert.deepEqual(requested.sort(), ['decisions', 'text']);
   assert.ok(modelsForConnection(catalog, 'https://openrouter.ai/api/alpha', 'decisions', now).includes('nace-ai/drex-v2.0'));
   assert.ok(modelsForConnection(catalog, 'https://openrouter.ai/api/v1', 'chat', now).includes('google/gemini-2.5-flash'));
+});
+
+test('live provider lists flag a model they no longer include and suggest a replacement', () => {
+  const live = { ...snapshot(), liveProviders: ['openrouter'] };
+  live.providers.openrouter = [{ id: 'google/gemini-2.5-flash', mode: 'chat' }];
+  assert.deepEqual(modelStatus(live, 'https://openrouter.ai/api/v1', 'retired/model', 'chat', now), { replacement: 'google/gemini-2.5-flash' });
+  assert.equal(modelStatus(live, 'https://openrouter.ai/api/v1', 'google/gemini-2.5-flash', 'chat', now), null);
+  assert.equal(modelStatus(snapshot(), 'https://api.openai.com/v1', 'anything', 'chat', now), null);
 });

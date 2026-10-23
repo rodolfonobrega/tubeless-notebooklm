@@ -42,7 +42,7 @@ test('provider errors never return the keys to the content', async () => {
   assert.equal(result.message.includes('fake-generator'), false);
 });
 
-test('localizador do worker aborta uma chamada lenta antes do limite de vida do Chrome', async () => {
+test('the worker locator aborts a slow call before the Chrome service worker lifetime limit', async () => {
   const { api } = apiFixture();
   let aborted = false;
   const handle = createNotebookLocatorHandler(api, async (_action, _candidates, _settings, _fetch, signal) => {

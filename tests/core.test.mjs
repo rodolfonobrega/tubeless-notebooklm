@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { normalizeTerms, uniqueVideos, normalizeSettings, parseNotebookUrl, isNotebookSite, DEFAULT_SETTINGS, sortVideosByRelevance } from '../core/search.js';
 import { buildDecisionRequest, readDecision } from '../core/providers.js';
 
-test('limita e deduplica consultas por idioma, mantendo o tema como reserva', () => {
+test('limits and deduplicates queries per language, keeping the topic as the fallback', () => {
   const terms = normalizeTerms({ pt: ['  energia solar ', 'energia solar', 'painéis solares', 'outro'], en: ['solar energy', 'solar energy', 'PV panels'] }, ['pt', 'en'], 2, 'energia solar');
   assert.deepEqual(terms, [{ language: 'pt', query: 'energia solar' }, { language: 'pt', query: 'painéis solares' }, { language: 'en', query: 'solar energy' }, { language: 'en', query: 'PV panels' }]);
   assert.deepEqual(normalizeTerms({}, ['pt', 'en'], 2, 'tema'), [{ language: 'pt', query: 'tema' }]);

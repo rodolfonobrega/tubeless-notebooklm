@@ -44,6 +44,8 @@ export async function runDiscovery({ topic, settings, previousResult, fetchImpl 
   }
   catch (error) {
     if (signal?.aborted) throw error;
+    // A retired generation model cannot be worked around: stop and tell the user to switch models.
+    if (error.code === 'MODEL_UNAVAILABLE') throw error;
     if (previousResult) throw new Error(`Could not prepare new terms: ${error.message}. Your previous results were kept.`);
     terms = [{ language: settings.languageList?.[0] || 'pt', query: cleanTopic }];
     warnings.push(`Could not vary the terms: ${error.message}. Searching the original topic.`);
@@ -114,6 +116,9 @@ export async function runDiscovery({ topic, settings, previousResult, fetchImpl 
 
   onProgress({ phase: 'evaluating', completed: 0, total: videos.length });
   const decisions = await mapLimit(videos, evaluationConcurrency, video => doAssess(cleanTopic, video), signal, (completed, total) => onProgress({ phase: 'evaluating', completed, total }));
+  // Every video would fail the same way with a retired evaluation model, so stop instead of listing each error.
+  const retired = decisions.find(decision => decision.status === 'rejected' && decision.reason?.code === 'MODEL_UNAVAILABLE');
+  if (retired) throw retired.reason;
   const evaluated = sortVideosByRelevance(videos.map((video, index) => {
     const decision = decisions[index];
     if (decision.status === 'rejected') return { ...video, status: 'error', probability: null, evaluationError: decision.reason?.message || 'Evaluation failed' };

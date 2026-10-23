@@ -24,7 +24,7 @@
 @media(min-width:600px){.settings-form{grid-template-columns:1fr 1fr}.settings-form>.form-group:last-of-type{grid-column:1/-1}.settings-header p{max-width:none}.connection-results{grid-template-columns:repeat(3,1fr)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .results-order{font-size:10px;color:#91aaa5;margin-bottom:8px}
-.model-name{margin-top:8px}
+.model-name{margin-top:8px}.model-notice{color:#f0c674;margin-top:6px}
 .language-picker{border:0;padding:0;margin:16px 0 0;min-width:0}.language-picker legend{font-size:11px;color:#becfc9;margin-bottom:9px}.language-options{display:flex;flex-wrap:wrap;gap:7px}.language-option{display:flex;align-items:center;gap:6px;border:1px solid #345057;border-radius:9px;padding:7px 9px;margin:0;font-size:11px;cursor:pointer;color:#becfc9;background:#0f2026}.language-option:has(input:checked){border-color:#a9cc6a;background:#243526;color:#e2f5c6}.language-option input{width:13px;height:13px;margin:0;accent-color:#d8fc81}.language-option:has(input:focus-visible){outline:2px solid #d8fc81;outline-offset:2px}.language-option:has(input:disabled){cursor:default}.language-option:has(input:disabled:not(:checked)),.language-picker:disabled{opacity:.6}.language-picker .field-hint{margin:8px 0 0}
 .catalog-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
 .catalog-actions .text-button{padding-left:0}

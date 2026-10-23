@@ -87,3 +87,13 @@ test('recency constraint penalizes and rejects older videos when recent ones are
   assert.equal(decisionNew.accepted, true);
   assert.equal(decisionNew.probability, 0.88);
 });
+
+test('a retired evaluation model fails with MODEL_UNAVAILABLE and tells the user to switch', async () => {
+  const retired = { ...settings, evaluationProtocol: 'chat', jevModel: 'gone/model' };
+  await assert.rejects(assessVideo('energia', { title: 'Solar' }, retired, async () => ({ ok: false, status: 404, json: async () => ({ error: { message: "The model 'gone/model' does not exist" } }) })), error => error.code === 'MODEL_UNAVAILABLE' && /Choose another model in Settings/.test(error.message));
+});
+
+test('a generic 404 is not mistaken for a retired model', async () => {
+  const retired = { ...settings, evaluationProtocol: 'chat', jevModel: 'gone/model' };
+  await assert.rejects(assessVideo('energia', { title: 'Solar' }, retired, async () => ({ ok: false, status: 404, json: async () => ({ error: { message: 'Not Found' } }) })), error => error.code === undefined);
+});

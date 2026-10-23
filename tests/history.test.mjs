@@ -18,7 +18,7 @@ test('creates a history entry preserving videos, selections, and terms', () => {
   assert.equal(entry.videos.length, 1);
 });
 
-test('adiciona nova busca no topo e substitui mesma pesquisa', () => {
+test('adds a new search at the top and replaces the same search', () => {
   const e1 = createHistoryEntry({ topic: 'curso sketchup' }, ['id1']);
   const e2 = createHistoryEntry({ topic: 'física quântica' }, ['id2']);
   let history = addHistoryEntry([], e1);
@@ -27,7 +27,7 @@ test('adiciona nova busca no topo e substitui mesma pesquisa', () => {
   assert.equal(history.length, 2);
   assert.equal(history[0].topic, 'física quântica');
 
-  // Adicionando mesma busca atualizada deve ir para o topo
+  // Adding the same updated search must move it to the top
   const e1Updated = createHistoryEntry({ topic: 'curso sketchup', discoveredCount: 20 }, ['id1', 'id3']);
   history = addHistoryEntry(history, e1Updated);
   assert.equal(history.length, 2);

@@ -33,7 +33,7 @@ async function createPage(dynamic = false, cache = {}) {
         }
         window.locatorCalls.push(message);
         const match = message.candidates.find(candidate => /Finalizar conexão/i.test(candidate.label));
-        return dynamic && match ? { ok: true, id: match.id } : { ok: false, message: 'Nenhum alvo seguro' };
+        return dynamic && match ? { ok: true, id: match.id } : { ok: false, message: 'No safe target' };
       }
     } };
     if (dynamic) {
@@ -77,7 +77,7 @@ try {
   assert.ok(largeResult.outcomes.every(item => item.status === 'imported'));
   assert.equal(await largeBatch.locator('.source-item').count(), 250);
   assert.equal(await largeBatch.evaluate(() => window.submissions), 1);
-  console.log('OK: 250 links enviados juntos e confirmados individualmente');
+  console.log('OK: 250 links sent together and confirmed individually');
   await largeBatch.close();
 
   const websites = await createPage();

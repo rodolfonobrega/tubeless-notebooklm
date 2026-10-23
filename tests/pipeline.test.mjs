@@ -16,7 +16,7 @@ test('evaluates 250 videos and keeps partial errors and relevance order', async 
     enrich: async items => items,
     assess: async (_topic, item) => {
       assessed.add(item.id);
-      if (item.index === 7) throw new Error('falha isolada');
+      if (item.index === 7) throw new Error('isolated failure');
       return { probability: item.index / 250, accepted: item.index >= 175 };
     },
     onProgress: value => { if (value.phase === 'evaluating') progress.push(value.completed); }
@@ -200,7 +200,18 @@ test('continuation with no new videos returns an empty batch and does not re-eva
 
 test('continuation filters repeats before the term limit and does not search the original topic on failure', async () => {
   const previousResult = { topic: 'energia', terms: [{ language: 'pt', query: 'antigo' }], videos: [] };
-  const options = { topic: 'energia', settings, previousResult, search: async () => { assert.fail('Nenhuma busca repetida deve ser disparada'); } };
+  const options = { topic: 'energia', settings, previousResult, search: async () => { assert.fail('No repeated search should be triggered'); } };
   await assert.rejects(runDiscovery({ ...options, expand: async () => [{ language: 'pt', query: 'antigo' }] }), /new terms/i);
   await assert.rejects(runDiscovery({ ...options, expand: async () => { throw new Error('quota'); } }), /quota/);
+});
+
+test('a retired evaluation model stops the search instead of listing every video error', async () => {
+  const gone = Object.assign(new Error('the model is no longer available'), { code: 'MODEL_UNAVAILABLE' });
+  await assert.rejects(runDiscovery({
+    topic: 'tema', settings,
+    expand: async () => [{ language: 'pt', query: 'termo' }],
+    search: async () => [video('abc12345678', 'termo'), video('def12345678', 'termo')],
+    enrich: async items => items,
+    assess: async () => { throw gone; }
+  }), error => error.code === 'MODEL_UNAVAILABLE');
 });

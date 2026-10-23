@@ -20,6 +20,13 @@ NotebookLM is excellent at answering questions about sources. TubeLess finds the
 
 ---
 
+## What's new in 1.6.0
+
+- **Retired models are reported clearly.** If a provider says a model is gone, the search stops and asks you to choose another model in Settings.
+- **Settings warn about retired models.** When OpenRouter no longer lists the model you picked, the field shows a suggested replacement.
+- **Decision models from OpenRouter are loaded** for video evaluation.
+- **Every part of the app is in English**, including the code, tests, and docs.
+
 ## What's new in 1.5.0
 
 - **Full English interface.** Every label, message, and prompt is now in English.
@@ -33,7 +40,7 @@ NotebookLM is excellent at answering questions about sources. TubeLess finds the
 
 ## Install in 60 seconds
 
-1. Download `TubeLess-1.5.0.zip` from the [latest release](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/latest) and extract it to a permanent folder.
+1. Download `TubeLess-1.6.0.zip` from the [latest release](https://github.com/rodolfonobrega/tubeless-notebooklm/releases/latest) and extract it to a permanent folder.
 2. Open `chrome://extensions` in Google Chrome.
 3. Turn on **Developer mode** and click **Load unpacked**.
 4. Select the extracted folder that contains `manifest.json`.

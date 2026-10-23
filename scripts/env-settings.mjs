@@ -17,7 +17,7 @@ export function settingsFromEnv(env, { provider = 'openai', chatEvaluation = fal
     throw new Error('Set EVALUATION_BASE_URL for an explicit Chat Completions evaluation connection.');
   }
   if (!chatEvaluation && evaluationProtocol === 'decisions' && source === 'typesafe' && !env.EVALUATION_BASE_URL) {
-    throw new Error('A chave TypeSafe direta requer o protocolo systemone.');
+    throw new Error('A direct TypeSafe key requires the systemone protocol.');
   }
   const fallback = evaluationProtocol === 'systemone'
     ? source === 'openrouter' ? { baseUrl: LLM_PRESETS.openrouter.baseUrl, model: 'jev-latest' } : EVALUATION_PRESETS.typesafe

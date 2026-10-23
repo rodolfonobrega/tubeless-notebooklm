@@ -99,6 +99,17 @@ export function inferEvaluationProtocol(catalog, baseUrl, modelId) {
   return 'chat';
 }
 
+// Returns a replacement when a live provider list (OpenRouter's own endpoint) no longer includes the model; otherwise null.
+// LiteLLM rows can lag behind, so they never trigger this.
+export function modelStatus(catalog, baseUrl, modelId, protocol = 'chat', now = Date.now()) {
+  let provider;
+  try { provider = HOSTS[new URL(baseUrl).hostname]; } catch { return null; }
+  if (!modelId || !catalog?.liveProviders?.includes(provider)) return null;
+  const list = modelsForConnection(catalog, baseUrl, protocol, now);
+  if (!list.length || list.includes(modelId)) return null;
+  return { replacement: list[0] };
+}
+
 async function readJson(response) {
   if (!response.ok) throw new Error(`Catalog unavailable (HTTP ${response.status}).`);
   if (Number(response.headers.get('content-length')) > MAX_BYTES) throw new Error('Catalog exceeds the size limit.');
@@ -155,6 +166,7 @@ export class ModelCatalog {
         if (!byKey.has(`evaluation:${id}`)) byKey.set(`evaluation:${id}`, { id, mode: 'evaluation' });
       }
       catalog.providers.openrouter = [...byKey.values()].sort((a, b) => a.id.localeCompare(b.id, 'en'));
+      catalog.liveProviders = ['openrouter'];
     } catch { /* Keep the LiteLLM rows for OpenRouter. */ }
   }
 

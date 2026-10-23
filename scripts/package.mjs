@@ -14,7 +14,7 @@ for (const [directory, extension] of [['core', '.js'], ['content', '.js'], ['ass
 }
 names.sort();
 const required = [manifest.background.service_worker, manifest.side_panel.default_path, ...Object.values(manifest.icons), ...manifest.content_scripts.flatMap(script => script.js)];
-for (const name of required) if (!names.includes(name)) throw new Error(`Arquivo do manifest fora do pacote: ${name}`);
+for (const name of required) if (!names.includes(name)) throw new Error(`Manifest file missing from the package: ${name}`);
 
 function crc32(data) {
   let crc = 0xffffffff;
@@ -72,4 +72,4 @@ const dist = resolve(root, 'dist');
 mkdirSync(dist, { recursive: true });
 const output = resolve(dist, `TubeLess-${manifest.version}.zip`);
 writeFileSync(output, archive);
-console.log(`Pacote criado: ${output} (${names.length} arquivos, ${archive.length} bytes). Sem .env, testes ou perfis de navegador.`);
+console.log(`Package created: ${output} (${names.length} files, ${archive.length} bytes). No .env, tests, or browser profiles included.`);
