@@ -631,11 +631,32 @@ async function checkUpdates() {
     asset = await checkForUpdate(currentVersion);
     await chrome.storage.local.set({ updateCheck: { checkedAt: Date.now(), asset } });
   }
-  if (!asset) return;
+  showUpdateNotice(asset);
+}
+
+function showUpdateNotice(asset) {
   availableUpdate = asset;
+  $('updateNotice').classList.toggle('hidden', !asset);
+  if (!asset) return;
   $('updateTitle').textContent = `TubeLess ${asset.version} is available`;
-  $('updateDetail').textContent = `You have ${currentVersion}. Download the zip, extract it into this same folder (replacing the files), then reload TubeLess at chrome://extensions.`;
-  $('updateNotice').classList.remove('hidden');
+  $('updateDetail').textContent = `You have ${chrome.runtime.getManifest().version}. Download the zip, extract it into this same folder (replacing the files), then reload TubeLess at chrome://extensions.`;
+}
+
+// The manual button always asks GitHub, ignoring the daily cache.
+async function checkUpdatesNow() {
+  const button = $('checkUpdates');
+  button.disabled = true;
+  $('updateStatus').textContent = 'Checking…';
+  try {
+    const asset = await checkForUpdate(chrome.runtime.getManifest().version);
+    await chrome.storage.local.set({ updateCheck: { checkedAt: Date.now(), asset } });
+    showUpdateNotice(asset);
+    $('updateStatus').textContent = asset ? `Version ${asset.version} is available. Use the notice on the search screen.` : `You have the latest version (${chrome.runtime.getManifest().version}).`;
+  } catch (error) {
+    $('updateStatus').textContent = `Could not check for updates: ${error.message}`;
+  } finally {
+    button.disabled = false;
+  }
 }
 
 async function downloadUpdate() {
@@ -648,5 +669,6 @@ async function downloadUpdate() {
 }
 
 $('updateDownload').addEventListener('click', downloadUpdate);
+$('checkUpdates').addEventListener('click', checkUpdatesNow);
 
 init().catch(error => showMessage(`Could not start the extension: ${error.message}`));
